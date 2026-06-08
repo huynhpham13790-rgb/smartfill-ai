@@ -1,0 +1,98 @@
+<!--
+  SmartFill AI - demo/demo-form.html
+  Trang form mẫu đủ loại ô để thử nghiệm extension.
+  Copyright (c) 2026 Phạm Văn Huynh
+  SPDX-License-Identifier: MIT
+-->
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Form mẫu - SmartFill AI Demo</title>
+    <style>
+      body { font-family: "Segoe UI", sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #1e293b; }
+      h1 { color: #2563eb; }
+      .group { margin-bottom: 18px; }
+      label { display: block; font-weight: 600; margin-bottom: 6px; }
+      input[type=text], input[type=email], input[type=tel], input[type=date], select {
+        width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;
+      }
+      fieldset { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; }
+      .inline { display: flex; gap: 16px; flex-wrap: wrap; }
+      .inline label { font-weight: 400; }
+      button { background: #2563eb; color: #fff; border: none; padding: 11px 18px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Form đăng ký mẫu</h1>
+    <p>Trang này dùng để thử nghiệm extension SmartFill AI với nhiều loại ô khác nhau.</p>
+
+    <form onsubmit="event.preventDefault(); alert('Đã gửi (demo).');">
+      <div class="group">
+        <label for="fullname">Họ và tên</label>
+        <input type="text" id="fullname" name="fullname" placeholder="Nhập họ tên" />
+      </div>
+
+      <div class="group">
+        <label for="msv">Mã số sinh viên (MSV)</label>
+        <input type="text" id="msv" name="student_id" />
+      </div>
+
+      <div class="group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" />
+      </div>
+
+      <div class="group">
+        <label for="phone">Số điện thoại</label>
+        <input type="tel" id="phone" name="phone" />
+      </div>
+
+      <div class="group">
+        <label for="dob">Ngày sinh</label>
+        <input type="date" id="dob" name="dob" />
+      </div>
+
+      <div class="group">
+        <label for="khoa">Khoa</label>
+        <select id="khoa" name="khoa">
+          <option value="">-- Chọn khoa --</option>
+          <option>Công nghệ thông tin</option>
+          <option>Điện tử viễn thông</option>
+          <option>Hệ thống thông tin kinh tế</option>
+          <option>Truyền thông đa phương tiện</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="tinh">Quê quán (Tỉnh/Thành)</label>
+        <select id="tinh" name="province">
+          <option value="">-- Chọn tỉnh --</option>
+          <option>Hà Nội</option>
+          <option>Tỉnh Thái Nguyên</option>
+          <option>Tỉnh Bắc Giang</option>
+          <option>Tỉnh Lạng Sơn</option>
+          <option>TP. Hồ Chí Minh</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <fieldset>
+          <legend>Giới tính</legend>
+          <div class="inline">
+            <label><input type="radio" name="gender" value="male" /> Nam</label>
+            <label><input type="radio" name="gender" value="female" /> Nữ</label>
+            <label><input type="radio" name="gender" value="other" /> Khác</label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="group">
+        <label><input type="checkbox" id="agree" name="agree" /> Tôi đồng ý với điều khoản</label>
+      </div>
+
+      <button type="submit">Gửi đăng ký</button>
+    </form>
+  </body>
+</html>

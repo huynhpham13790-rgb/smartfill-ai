@@ -1,0 +1,64 @@
+<!--
+  SmartFill AI - popup.html
+  Copyright (c) 2026 Phạm Văn Huynh
+  SPDX-License-Identifier: MIT
+-->
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartFill AI</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="logo">SmartFill <span>AI</span></div>
+      <div class="subtitle">Điền form bằng AI chạy local</div>
+    </header>
+
+    <main class="content">
+      <!-- Chọn hồ sơ -->
+      <section class="block">
+        <label class="field-label" for="profileSelect">Hồ sơ</label>
+        <div class="row">
+          <select id="profileSelect" class="grow"></select>
+          <button id="newProfileBtn" class="btn btn-ghost" title="Tạo hồ sơ mới">+</button>
+          <button id="deleteProfileBtn" class="btn btn-ghost danger" title="Xóa hồ sơ">🗑</button>
+        </div>
+        <input id="profileName" class="input" type="text" placeholder="Tên hồ sơ (vd: Hồ sơ chính)" />
+      </section>
+
+      <!-- Thông tin hồ sơ -->
+      <section class="block">
+        <label class="field-label">Thông tin</label>
+        <div id="fieldsContainer"></div>
+        <button id="addFieldBtn" class="btn btn-ghost full">+ Thêm trường</button>
+      </section>
+
+      <button id="saveBtn" class="btn btn-secondary full">💾 Lưu hồ sơ</button>
+
+      <!-- Cài đặt Ollama -->
+      <section class="block">
+        <details>
+          <summary class="field-label clickable">⚙️ Cài đặt AI (Ollama)</summary>
+          <div class="settings">
+            <label class="mini-label" for="ollamaUrl">Địa chỉ Ollama</label>
+            <input id="ollamaUrl" class="input" type="text" placeholder="http://localhost:11434" />
+            <label class="mini-label" for="model">Model</label>
+            <input id="model" class="input" type="text" placeholder="qwen2.5:7b" />
+            <button id="testBtn" class="btn btn-ghost full">🔌 Kiểm tra kết nối</button>
+            <div id="testResult" class="hint"></div>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <button id="fillBtn" class="btn btn-primary full">✨ Điền form trên trang này</button>
+      <div id="status" class="status"></div>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

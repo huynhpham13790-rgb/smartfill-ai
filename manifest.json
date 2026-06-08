@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "SmartFill AI - Trợ lý điền form bằng AI",
+  "version": "1.1.0",
+  "description": "Tự động điền form trên web bằng AI chạy local (Ollama). Hiểu nhãn ô thông minh, hỗ trợ text, dropdown, radio, checkbox, ngày sinh.",
+  "author": "Phạm Văn Huynh",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "http://localhost:11434/*",
+    "http://127.0.0.1:11434/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SmartFill AI",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

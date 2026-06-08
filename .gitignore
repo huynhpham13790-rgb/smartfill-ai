@@ -1,0 +1,15 @@
+# Dependencies (nếu sau này thêm)
+node_modules/
+
+# Hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Trình soạn thảo
+.vscode/
+.idea/
+*.swp
+
+# File tạm
+*.log
+*.tmp

@@ -1,0 +1,198 @@
+/*
+ * SmartFill AI - popup.css
+ * Copyright (c) 2026 Phạm Văn Huynh
+ * SPDX-License-Identifier: MIT
+ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #16a34a;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --danger: #dc2626;
+}
+
+body {
+  width: 360px;
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primary), #4f46e5);
+  color: #fff;
+  padding: 14px 16px;
+}
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+}
+.logo span {
+  font-weight: 400;
+  opacity: 0.9;
+}
+.subtitle {
+  font-size: 11px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.content {
+  padding: 14px 16px;
+}
+
+.block {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.mini-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 0 3px;
+}
+.clickable {
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.grow {
+  flex: 1;
+}
+
+.input,
+select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--card);
+  color: var(--text);
+}
+.input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Hàng key-value */
+.kv-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.kv-row .kv-key {
+  flex: 0 0 38%;
+  font-weight: 500;
+}
+.kv-row .kv-val {
+  flex: 1;
+}
+.kv-remove {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn.full {
+  width: 100%;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+.btn-secondary {
+  background: var(--secondary);
+  color: #fff;
+  margin-bottom: 14px;
+}
+.btn-secondary:hover {
+  background: #15803d;
+}
+.btn-ghost {
+  background: #eef2ff;
+  color: var(--primary);
+}
+.btn-ghost:hover {
+  background: #e0e7ff;
+}
+.btn-ghost.danger {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.settings {
+  padding-top: 8px;
+}
+
+.footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+
+.status,
+.hint {
+  font-size: 12px;
+  margin-top: 8px;
+  min-height: 16px;
+  line-height: 1.4;
+}
+.status.ok,
+.hint.ok {
+  color: var(--secondary);
+}
+.status.err,
+.hint.err {
+  color: var(--danger);
+}
+.status.loading {
+  color: var(--primary);
+}
