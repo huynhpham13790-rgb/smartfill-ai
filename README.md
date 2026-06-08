@@ -1,144 +1,146 @@
-# SmartFill AI — Trợ lý điền form bằng AI chạy local
+# SmartFill AI — AI-powered form filler that runs locally
 
-> Extension trình duyệt giúp tự động điền các biểu mẫu web (form đăng ký, khai báo thông tin, tạo tài khoản...) bằng AI chạy **local** qua [Ollama]. Bạn lưu hồ sơ một lần, AI sẽ tự hiểu nhãn từng ô và điền hộ — kể cả dropdown, radio, checkbox, ngày sinh.
+> 🌐 **Language / Ngôn ngữ:** **English** · [Tiếng Việt](README.vi.md)
 
-**Sản phẩm dự thi "Phát triển phần mềm mã nguồn mở tích hợp AI 2026" — Khoa CNTT, Trường ĐH CNTT&TT, ĐH Thái Nguyên.**
+> A browser extension that auto-fills web forms (sign-up forms, registration, account creation...) using an AI model that runs **locally** through [Ollama]. Save your profile once, and the AI understands each field's label and fills it for you — including dropdowns, radio buttons, checkboxes, and dates.
+
+**Entry for the "Open-Source AI-Integrated Software Development 2026" competition — Faculty of IT, University of Information and Communication Technology, Thai Nguyen University.**
 
 ---
 
-## Vì sao có dự án này?
+## Why this project?
 
-Sinh viên thường xuyên phải nhập đi nhập lại cùng một bộ thông tin (họ tên, mã sinh viên, lớp, khoa, email...) vào hàng chục biểu mẫu khác nhau. SmartFill AI giải quyết việc đó: khai báo hồ sơ một lần, mỗi lần gặp form chỉ cần bấm một nút.
+Students constantly re-type the same set of information (full name, student ID, class, faculty, email...) into dozens of different forms. SmartFill AI solves that: declare your profile once, then fill any form with a single click.
 
-Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp cứng theo tên trường), SmartFill AI dùng **mô hình ngôn ngữ** để *hiểu ngữ nghĩa* của nhãn. Ví dụ ô ghi "MSV", "Student ID" hay "mã sinh viên" đều được nhận ra là mã số sinh viên; quê quán dạng dropdown "Tỉnh Thái Nguyên" vẫn khớp được với hồ sơ ghi "Thái Nguyên".
+Unlike the browser's built-in autofill (which only matches field names rigidly), SmartFill AI uses a **language model** to *understand the meaning* of each label. For example, a field labeled "MSV", "Student ID", or "mã sinh viên" is all recognized as the student ID; a hometown dropdown showing "Tỉnh Thái Nguyên" still matches a profile that says "Thái Nguyên".
 
-## Tính năng
+## Features
 
-- ✅ Điền **mọi website** mở trong trình duyệt (form đăng ký, hồ sơ, tạo tài khoản).
-- ✅ Hỗ trợ nhiều loại ô: text, email, số điện thoại, **dropdown (select)**, **radio**, **checkbox**, **ngày sinh (date)**.
-- ✅ Hoạt động cả với **Google Forms** (các ô lựa chọn dạng đặc biệt `role="listbox"`/`role="radio"`).
-- ✅ AI hiểu nhãn theo ngữ nghĩa, không cần khớp tên chính xác.
-- ✅ Quản lý **nhiều hồ sơ** (vd: hồ sơ cá nhân, hồ sơ học vụ).
-- ✅ **Riêng tư tuyệt đối**: dữ liệu lưu trong máy bạn, AI chạy local — không gửi lên cloud.
-- ✅ Tô màu các ô vừa điền để bạn **rà lại trước khi gửi**.
+- ✅ Fills forms on **any website** open in your browser (registration, profiles, account creation).
+- ✅ Supports many field types: text, email, phone number, **dropdown (select)**, **radio**, **checkbox**, **date of birth**.
+- ✅ Works with **Google Forms** too (its special choice widgets `role="listbox"`/`role="radio"`).
+- ✅ The AI understands labels semantically — no exact name match required.
+- ✅ Manage **multiple profiles** (e.g. personal profile, academic profile).
+- ✅ **Fully private**: your data stays on your machine and the AI runs locally — nothing is sent to the cloud.
+- ✅ Highlights the fields it just filled so you can **review before submitting**.
 
-## Yêu cầu
+## Requirements
 
-- Trình duyệt nhân Chromium: **Google Chrome** hoặc **Microsoft Edge** (hỗ trợ Manifest V3).
-- [Ollama] đã cài và đang chạy trên máy.
+- A Chromium-based browser: **Google Chrome** or **Microsoft Edge** (Manifest V3 support).
+- [Ollama] installed and running on your machine.
 
-## Cài đặt
+## Installation
 
-### Bước 1 — Cài và chạy Ollama (AI local)
+### Step 1 — Install and run Ollama (local AI)
 
-1. Tải Ollama tại https://ollama.com và cài đặt.
-2. Tải model AI. **Khuyến nghị tối thiểu `qwen2.5:7b`** (cân bằng giữa độ chính xác tiếng Việt và tốc độ):
+1. Download Ollama from https://ollama.com and install it.
+2. Pull an AI model. **Minimum recommended: `qwen2.5:7b`** (a good balance of Vietnamese accuracy and speed):
 
    ```bash
    ollama pull qwen2.5:7b
    ```
 
-   Tùy cấu hình máy, bạn có thể chọn model khác — xem [Chọn model phù hợp với máy](#chọn-model-phù-hợp-với-máy).
+   Depending on your hardware, you can choose a different model — see [Choosing the right model for your machine](#choosing-the-right-model-for-your-machine).
 
-3. Cho phép extension gọi Ollama. Ollama mặc định chỉ nhận yêu cầu từ `localhost`; cần cấp quyền cho extension bằng biến môi trường `OLLAMA_ORIGINS`:
+3. Allow the extension to call Ollama. By default Ollama only accepts requests from `localhost`; grant access to the extension with the `OLLAMA_ORIGINS` environment variable:
 
    - **Windows (PowerShell):**
      ```powershell
      setx OLLAMA_ORIGINS "chrome-extension://*"
      ```
-     Sau đó khởi động lại Ollama.
+     Then restart Ollama.
    - **macOS / Linux:**
      ```bash
      export OLLAMA_ORIGINS="chrome-extension://*"
      ollama serve
      ```
 
-### Chọn model phù hợp với máy
+### Choosing the right model for your machine
 
-SmartFill AI chạy được với **bất kỳ model nào Ollama hỗ trợ**. Độ chính xác khi điền form (chép đúng nguyên văn, không điền nhầm ô, chọn đúng mục dropdown) phụ thuộc nhiều vào kích cỡ model: càng lớn càng chính xác, nhưng cần nhiều RAM/VRAM và chạy chậm hơn.
+SmartFill AI works with **any model Ollama supports**. Form-filling accuracy (copying values verbatim, not filling the wrong field, picking the correct dropdown option) depends heavily on model size: bigger means more accurate, but needs more RAM/VRAM and runs slower.
 
-| Model (`ollama pull ...`) | RAM/VRAM cần | Phù hợp với | Độ chính xác |
+| Model (`ollama pull ...`) | RAM/VRAM needed | Best for | Accuracy |
 |---|---|---|---|
-| `qwen2.5:3b` | ~3–4 GB | Máy yếu, RAM 8 GB, không card rời | Tạm ổn (đôi khi gõ sai / điền nhầm) |
-| `qwen2.5:7b` ⭐ | ~6–8 GB | RAM 16 GB hoặc GPU ≥ 6 GB VRAM | Tốt — **khuyến nghị tối thiểu** |
-| `llama3.1:8b` | ~7–9 GB | RAM 16 GB, GPU 8 GB | Tốt |
-| `qwen2.5:14b` | ~10–12 GB | RAM ≥ 16–32 GB, GPU ≥ 10 GB VRAM | Rất tốt |
-| `qwen2.5:32b` | ~20 GB trở lên | GPU ≥ 16–24 GB VRAM | Cao nhất |
+| `qwen2.5:3b` | ~3–4 GB | Low-end machines, 8 GB RAM, no dedicated GPU | OK (occasional typos / wrong field) |
+| `qwen2.5:7b` ⭐ | ~6–8 GB | 16 GB RAM or GPU ≥ 6 GB VRAM | Good — **minimum recommended** |
+| `llama3.1:8b` | ~7–9 GB | 16 GB RAM, 8 GB GPU | Good |
+| `qwen2.5:14b` | ~10–12 GB | ≥ 16–32 GB RAM, GPU ≥ 10 GB VRAM | Very good |
+| `qwen2.5:32b` | ~20 GB and up | GPU ≥ 16–24 GB VRAM | Highest |
 
-Gợi ý nhanh theo máy:
+Quick guidance by machine:
 
-- **Laptop văn phòng, không card đồ họa rời (RAM 8 GB):** `qwen2.5:3b` — chạy được nhưng nên rà kỹ lại trước khi gửi.
-- **Máy phổ thông (RAM 16 GB) hoặc có GPU 6–8 GB:** `qwen2.5:7b` ⭐ — cân bằng nhất, nên dùng.
-- **Máy mạnh (GPU ≥ 10 GB VRAM):** `qwen2.5:14b` trở lên để có độ chính xác cao nhất.
+- **Office laptop, no dedicated GPU (8 GB RAM):** `qwen2.5:3b` — works, but review carefully before submitting.
+- **Mainstream machine (16 GB RAM) or a 6–8 GB GPU:** `qwen2.5:7b` ⭐ — the best balance, recommended.
+- **Powerful machine (GPU ≥ 10 GB VRAM):** `qwen2.5:14b` or higher for top accuracy.
 
-> **Vì sao chọn dòng Qwen2.5?** Nó hiểu tiếng Việt và xuất JSON ổn định hơn nhiều model cùng kích cỡ — rất hợp với việc đọc nhãn form tiếng Việt. Bạn vẫn có thể thử model khác (Gemma, Llama, Mistral...) trong **Cài đặt AI → Model**.
+> **Why the Qwen2.5 family?** It understands Vietnamese and produces stable JSON output far better than other models of the same size — ideal for reading Vietnamese form labels. You can still try other models (Gemma, Llama, Mistral...) under **AI Settings → Model**.
 
-Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama) → Model** và nhập đúng tên model bạn đã tải (vd `qwen2.5:7b`), rồi bấm **Kiểm tra kết nối**.
+After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama) → Model**, enter the exact name of the model you downloaded (e.g. `qwen2.5:7b`), and click **Test connection**.
 
-### Bước 2 — Nạp extension vào trình duyệt
+### Step 2 — Load the extension into your browser
 
-1. Tải mã nguồn này về (Code → Download ZIP, hoặc `git clone`), giải nén.
-2. Mở Chrome/Edge, vào `chrome://extensions` (Edge: `edge://extensions`).
-3. Bật **Developer mode** (Chế độ nhà phát triển) ở góc trên bên phải.
-4. Bấm **Load unpacked** (Tải tiện ích đã giải nén) → chọn thư mục `smartfill-ai`.
-5. Biểu tượng SmartFill AI sẽ xuất hiện trên thanh công cụ.
+1. Download this source code (Code → Download ZIP, or `git clone`) and unzip it.
+2. Open Chrome/Edge and go to `chrome://extensions` (Edge: `edge://extensions`).
+3. Turn on **Developer mode** in the top-right corner.
+4. Click **Load unpacked** → select the `smartfill-ai` folder.
+5. The SmartFill AI icon will appear in your toolbar.
 
-> Đây là một extension thuần JavaScript, **không cần bước build/biên dịch**. Mã nguồn chạy trực tiếp đúng như trong kho.
+> This is a pure-JavaScript extension with **no build/compile step**. The source runs directly as it is in the repository.
 
-## Cách dùng
+## Usage
 
-1. Bấm biểu tượng SmartFill AI để mở popup.
-2. Nhập thông tin vào hồ sơ (có sẵn các trường gợi ý; thêm/bớt tùy ý) → **Lưu hồ sơ**.
-3. Mở **Cài đặt AI** → bấm **Kiểm tra kết nối** để chắc chắn Ollama sẵn sàng.
-4. Mở một trang có form, bấm **✨ Điền form trên trang này**.
-5. AI đọc form, điền các ô khớp, và tô viền xanh những ô đã điền. **Rà lại rồi bấm gửi.**
+1. Click the SmartFill AI icon to open the popup.
+2. Enter your information into a profile (suggested fields are pre-filled; add/remove as needed) → **Save profile**.
+3. Open **AI Settings** → click **Test connection** to make sure Ollama is ready.
+4. Open a page with a form and click **✨ Fill the form on this page**.
+5. The AI reads the form, fills the matching fields, and outlines them in green. **Review, then submit.**
 
-## Cấu trúc dự án
+## Project structure
 
 ```
 smartfill-ai/
-├── manifest.json        # Khai báo extension (Manifest V3)
-├── popup/               # Giao diện quản lý hồ sơ
+├── manifest.json        # Extension manifest (Manifest V3)
+├── popup/               # Profile management UI
 │   ├── popup.html
 │   ├── popup.css
 │   └── popup.js
 ├── src/
-│   ├── content.js       # Quét & điền form trên trang
-│   └── background.js     # Service worker: gọi Ollama, map dữ liệu
-├── icons/               # Biểu tượng extension
-├── demo/                # Trang form mẫu để thử nghiệm
+│   ├── content.js       # Scans & fills forms on the page
+│   └── background.js    # Service worker: calls Ollama, maps data
+├── icons/               # Extension icons
+├── demo/                # Sample form page for testing
 │   └── demo-form.html
-├── LICENSE              # Giấy phép MIT
+├── LICENSE              # MIT License
 ├── CHANGELOG.md
 └── README.md
 ```
 
-## Công nghệ & thư viện
+## Tech & libraries
 
-- **Chrome Extension Manifest V3** — không phụ thuộc framework ngoài.
-- **JavaScript thuần (ES2020)** — không cần bundler, không gói đính kèm bên thứ ba.
-- **[Ollama]** — máy chủ mô hình ngôn ngữ chạy local; gọi qua REST API (`/api/chat`).
-- **Model mặc định:** `qwen2.5:7b` (khuyến nghị tối thiểu; có thể đổi sang model bất kỳ đã `ollama pull` trong Cài đặt AI).
+- **Chrome Extension Manifest V3** — no external framework dependency.
+- **Plain JavaScript (ES2020)** — no bundler, no bundled third-party packages.
+- **[Ollama]** — local language-model server; called via its REST API (`/api/chat`).
+- **Default model:** `qwen2.5:7b` (minimum recommended; switch to any model you've `ollama pull`ed in AI Settings).
 
-Toàn bộ chức năng AI dùng mô hình mã nguồn mở chạy cục bộ — không có khóa API trả phí, không gửi dữ liệu ra ngoài.
+All AI functionality uses an open-source model running locally — no paid API keys, no data sent anywhere.
 
-## Khắc phục sự cố
+## Troubleshooting
 
-| Hiện tượng | Cách xử lý |
+| Symptom | What to do |
 |---|---|
-| "Không kết nối được Ollama" | Kiểm tra Ollama đang chạy (`ollama serve`) và đã đặt `OLLAMA_ORIGINS`. |
-| Kết nối được nhưng báo thiếu model | Chạy `ollama pull qwen2.5:7b` (hoặc đúng tên model bạn đặt trong Cài đặt AI). |
-| Điền sai chính tả / điền nhầm ô | Model đang dùng quá nhỏ. Đổi lên `qwen2.5:7b` trở lên (xem [Chọn model phù hợp với máy](#chọn-model-phù-hợp-với-máy)). |
-| Ô dropdown/lựa chọn của Google Forms không chọn được | Tải lại trang rồi thử lại; đảm bảo đã reload extension sau khi cập nhật. |
-| Điền thiếu vài ô | Một số form dùng JS đặc biệt; rà lại và điền tay những ô còn trống. |
-| Nút không có tác dụng | Tải lại trang rồi thử lại; một số trang hệ thống (chrome://) không cho phép. |
+| "Cannot connect to Ollama" | Check that Ollama is running (`ollama serve`) and that `OLLAMA_ORIGINS` is set. |
+| Connects but reports a missing model | Run `ollama pull qwen2.5:7b` (or the exact model name set in AI Settings). |
+| Typos / wrong field filled | The model is too small. Move up to `qwen2.5:7b` or higher (see [Choosing the right model](#choosing-the-right-model-for-your-machine)). |
+| Google Forms dropdown/choice won't get selected | Reload the page and retry; make sure you reloaded the extension after updating. |
+| A few fields left empty | Some forms use special JS; review and fill the remaining fields manually. |
+| Button does nothing | Reload the page and retry; some system pages (chrome://) are not allowed. |
 
-## Quản lý lỗi & đóng góp
+## Issues & contributing
 
-Báo lỗi hoặc đề xuất tính năng qua **GitHub Issues** của dự án. Lịch sử thay đổi xem tại [CHANGELOG.md](CHANGELOG.md).
+Report bugs or request features via the project's **GitHub Issues**. See the change history in [CHANGELOG.md](CHANGELOG.md).
 
-## Giấy phép
+## License
 
-Phát hành theo [Giấy phép MIT](LICENSE) — bạn được tự do dùng, sửa, và phân phối lại.
+Released under the [MIT License](LICENSE) — you are free to use, modify, and redistribute it.
 
 [Ollama]: https://ollama.com
