@@ -114,6 +114,9 @@ smartfill-ai/
 ├── src/
 │   ├── content.js       # Scans & fills forms on the page
 │   └── background.js    # Service worker: calls Ollama, maps data
+├── mcp-server/          # Node.js MCP server integration
+│   ├── package.json
+│   └── index.js
 ├── icons/               # Extension icons
 ├── demo/                # Sample form page for testing
 │   └── demo-form.html
@@ -122,12 +125,47 @@ smartfill-ai/
 └── README.md
 ```
 
+## Model Context Protocol (MCP) Server
+
+SmartFill AI includes a Node.js-based MCP Server. This allows autonomous AI agents (like Claude Code, Cursor, etc.) to command the form scanner and fill pages on your active browser tab directly as tools.
+
+### Running the MCP Server
+
+1. Make sure your browser is launched with remote debugging enabled on port `9222`:
+   - **Zen Browser / Firefox:** `zen-browser --remote-debugging-port=9222`
+   - **Chrome:** `google-chrome --remote-debugging-port=9222`
+2. Install the server dependencies:
+   ```bash
+   cd mcp-server
+   npm install
+   ```
+3. Register the MCP server in your AI agent config (e.g., `claudecode.json` or Cursor settings):
+   ```json
+   {
+     "mcpServers": {
+       "smartfill-ai-mcp": {
+         "command": "node",
+         "args": ["path/to/smartfill-ai/mcp-server/index.js"]
+       }
+     }
+   }
+   ```
+
+### Exposed Tools
+
+- **`scan_form`**: Scans the active browser tab's DOM structure and returns the list of detected input/select/textarea fields.
+- **`fill_form`**: Automatically fills detected forms on the active tab using a profile object. Takes arguments:
+  - `profile` (object, required): Key-value pairs representing user profile data.
+  - `model` (string, optional): The local Ollama model to use (default: `qwen2.5:7b`).
+  - `ollamaUrl` (string, optional): Local Ollama server URL (default: `http://localhost:11434`).
+
 ## Tech & libraries
 
 - **Chrome Extension Manifest V3** — no external framework dependency.
 - **Plain JavaScript (ES2020)** — no bundler, no bundled third-party packages.
 - **[Ollama]** — local language-model server; called via its REST API (`/api/chat`).
 - **Default model:** `qwen2.5:7b` (minimum recommended; switch to any model you've `ollama pull`ed in AI Settings).
+- **Model Context Protocol (MCP)** — enables external agent tool calling via StdIO transport.
 
 All AI functionality uses an open-source model running locally — no paid API keys, no data sent anywhere.
 

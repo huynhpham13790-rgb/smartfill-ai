@@ -114,6 +114,9 @@ smartfill-ai/
 ├── src/
 │   ├── content.js       # Quét & điền form trên trang
 │   └── background.js     # Service worker: gọi Ollama, map dữ liệu
+├── mcp-server/          # Tích hợp MCP server chạy trên Node.js
+│   ├── package.json
+│   └── index.js
 ├── icons/               # Biểu tượng extension
 ├── demo/                # Trang form mẫu để thử nghiệm
 │   └── demo-form.html
@@ -122,12 +125,47 @@ smartfill-ai/
 └── README.md
 ```
 
+## Model Context Protocol (MCP) Server
+
+SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js. Điều này cho phép các trợ lý AI tự động (như Claude Code, Cursor...) gọi chức năng quét form và tự động điền form trực tiếp trên tab trình duyệt đang mở của bạn như một công cụ (tool).
+
+### Chạy MCP Server
+
+1. Đảm bảo trình duyệt của bạn đã được khởi động với cổng gỡ lỗi từ xa `9222`:
+   - **Zen Browser / Firefox:** `zen-browser --remote-debugging-port=9222`
+   - **Chrome:** `google-chrome --remote-debugging-port=9222`
+2. Cài đặt các gói phụ thuộc:
+   ```bash
+   cd mcp-server
+   npm install
+   ```
+3. Đăng ký MCP server trong cấu hình của trợ lý AI (ví dụ `claudecode.json` hoặc cài đặt Cursor):
+   ```json
+   {
+     "mcpServers": {
+       "smartfill-ai-mcp": {
+         "command": "node",
+         "args": ["path/to/smartfill-ai/mcp-server/index.js"]
+       }
+     }
+   }
+   ```
+
+### Các Công Cụ (Tools) Cung Cấp
+
+- **`scan_form`**: Quét cấu trúc DOM của tab trình duyệt đang hoạt động và trả về danh sách các trường input/select/textarea phát hiện được.
+- **`fill_form`**: Tự động điền các ô nhập trên tab đang hoạt động bằng đối tượng thông tin hồ sơ được cung cấp. Nhận các tham số:
+  - `profile` (đối tượng, bắt buộc): Các cặp khóa-giá trị của hồ sơ người dùng.
+  - `model` (chuỗi, tùy chọn): Model Ollama cục bộ sẽ dùng (mặc định: `qwen2.5:7b`).
+  - `ollamaUrl` (chuỗi, tùy chọn): URL máy chủ Ollama cục bộ (mặc định: `http://localhost:11434`).
+
 ## Công nghệ & thư viện
 
 - **Chrome Extension Manifest V3** — không phụ thuộc framework ngoài.
 - **JavaScript thuần (ES2020)** — không cần bundler, không gói đính kèm bên thứ ba.
 - **[Ollama]** — máy chủ mô hình ngôn ngữ chạy local; gọi qua REST API (`/api/chat`).
 - **Model mặc định:** `qwen2.5:7b` (khuyến nghị tối thiểu; có thể đổi sang model bất kỳ đã `ollama pull` trong Cài đặt AI).
+- **Model Context Protocol (MCP)** — cho phép các tác nhân AI gọi công cụ trực tiếp qua StdIO transport.
 
 Toàn bộ chức năng AI dùng mô hình mã nguồn mở chạy cục bộ — không có khóa API trả phí, không gửi dữ liệu ra ngoài.
 
