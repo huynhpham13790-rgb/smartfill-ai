@@ -26,7 +26,7 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 
 ## Yêu cầu
 
-- Trình duyệt nhân Chromium: **Google Chrome** hoặc **Microsoft Edge** (hỗ trợ Manifest V3).
+- Trình duyệt hỗ trợ Manifest V3: **Google Chrome**, **Microsoft Edge**, **Brave**, **Opera** (nhân Chromium), hoặc **Mozilla Firefox**, **Zen Browser** (nhân Firefox).
 - [Ollama] đã cài và đang chạy trên máy.
 
 ## Cài đặt
@@ -46,12 +46,12 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 
    - **Windows (PowerShell):**
      ```powershell
-     setx OLLAMA_ORIGINS "chrome-extension://*"
+     setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
      ```
      Sau đó khởi động lại Ollama.
    - **macOS / Linux:**
      ```bash
-     export OLLAMA_ORIGINS="chrome-extension://*"
+     export OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*"
      ollama serve
      ```
 
@@ -80,10 +80,17 @@ Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama) → Model** và
 ### Bước 2 — Nạp extension vào trình duyệt
 
 1. Tải mã nguồn này về (Code → Download ZIP, hoặc `git clone`), giải nén.
-2. Mở Chrome/Edge, vào `chrome://extensions` (Edge: `edge://extensions`).
-3. Bật **Developer mode** (Chế độ nhà phát triển) ở góc trên bên phải.
-4. Bấm **Load unpacked** (Tải tiện ích đã giải nén) → chọn thư mục `smartfill-ai`.
-5. Biểu tượng SmartFill AI sẽ xuất hiện trên thanh công cụ.
+2. Nạp extension vào trình duyệt:
+   - **Đối với Chrome / Edge / trình duyệt nhân Chromium:**
+     1. Mở `chrome://extensions` (Edge: `edge://extensions`).
+     2. Bật **Developer mode** (Chế độ nhà phát triển) ở góc trên bên phải.
+     3. Bấm **Load unpacked** (Tải tiện ích đã giải nén) → chọn thư mục `smartfill-ai`.
+   - **Đối với Firefox / Zen Browser / trình duyệt nhân Firefox:**
+     1. Mở `about:debugging` trong thanh địa chỉ.
+     2. Chọn **This Firefox** (hoặc **This Zen**) ở khung bên trái.
+     3. Bấm **Load Temporary Add-on...** (Tải Tiện ích Tạm thời...).
+     4. Chọn tệp `manifest.json` trong thư mục `smartfill-ai`.
+3. Biểu tượng SmartFill AI sẽ xuất hiện trên thanh công cụ.
 
 > Đây là một extension thuần JavaScript, **không cần bước build/biên dịch**. Mã nguồn chạy trực tiếp đúng như trong kho.
 

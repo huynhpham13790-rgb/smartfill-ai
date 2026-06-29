@@ -26,7 +26,7 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 
 ## Requirements
 
-- A Chromium-based browser: **Google Chrome** or **Microsoft Edge** (Manifest V3 support).
+- A Manifest V3 compatible browser: **Google Chrome**, **Microsoft Edge**, **Brave**, **Opera** (Chromium-based), or **Mozilla Firefox**, **Zen Browser** (Firefox-based).
 - [Ollama] installed and running on your machine.
 
 ## Installation
@@ -46,12 +46,12 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 
    - **Windows (PowerShell):**
      ```powershell
-     setx OLLAMA_ORIGINS "chrome-extension://*"
+     setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
      ```
      Then restart Ollama.
    - **macOS / Linux:**
      ```bash
-     export OLLAMA_ORIGINS="chrome-extension://*"
+     export OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*"
      ollama serve
      ```
 
@@ -80,10 +80,17 @@ After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama) → Mode
 ### Step 2 — Load the extension into your browser
 
 1. Download this source code (Code → Download ZIP, or `git clone`) and unzip it.
-2. Open Chrome/Edge and go to `chrome://extensions` (Edge: `edge://extensions`).
-3. Turn on **Developer mode** in the top-right corner.
-4. Click **Load unpacked** → select the `smartfill-ai` folder.
-5. The SmartFill AI icon will appear in your toolbar.
+2. Load the extension:
+   - **For Chrome / Edge / Chromium-based browsers:**
+     1. Open `chrome://extensions` (Edge: `edge://extensions`).
+     2. Turn on **Developer mode** in the top-right corner.
+     3. Click **Load unpacked** → select the `smartfill-ai` folder.
+   - **For Firefox / Zen Browser / Firefox-based browsers:**
+     1. Open `about:debugging` in the address bar.
+     2. Click **This Firefox** (or **This Zen**) on the left panel.
+     3. Click **Load Temporary Add-on...**
+     4. Select the `manifest.json` file inside the `smartfill-ai` directory.
+3. The SmartFill AI icon will appear in your toolbar.
 
 > This is a pure-JavaScript extension with **no build/compile step**. The source runs directly as it is in the repository.
 
