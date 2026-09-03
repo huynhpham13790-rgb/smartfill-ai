@@ -38,7 +38,7 @@ const statusEl = $("status");
 
 // ===== Lưu trữ =====
 async function load() {
-  const data = await chrome.storage.local.get(["profiles", "activeProfileId", "ollamaUrl", "model"]);
+  const data = await chrome.storage.local.get(["profiles", "activeProfileId", "ollamaUrl", "model", "preview"]);
   state.profiles = data.profiles || [];
   state.activeProfileId = data.activeProfileId || null;
 
@@ -54,6 +54,7 @@ async function load() {
 
   $("ollamaUrl").value = data.ollamaUrl || "http://localhost:11434";
   $("model").value = data.model || "qwen2.5:7b";
+  $("previewToggle").checked = !!data.preview;
 
   renderProfileSelect();
   renderActiveProfile();
@@ -208,13 +209,15 @@ async function fillForm() {
     return;
   }
 
-  let res = await sendToTab(tab.id, { action: "fillForm", profile: p.data });
+  const preview = $("previewToggle").checked;
+  const payload = { action: "fillForm", profile: p.data, preview };
+  let res = await sendToTab(tab.id, payload);
 
   // Nếu content script chưa được nạp (trang mở trước khi cài), nạp rồi thử lại.
   if (res === null) {
     try {
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["src/content.js"] });
-      res = await sendToTab(tab.id, { action: "fillForm", profile: p.data });
+      res = await sendToTab(tab.id, payload);
     } catch (e) {
       setStatus("Không chạy được trên trang này (" + e.message + ").", "err");
       return;
@@ -223,10 +226,32 @@ async function fillForm() {
 
   if (!res) {
     setStatus("Không nhận được phản hồi từ trang.", "err");
+  } else if (res.cancelled) {
+    setStatus("Đã huỷ, không thay đổi gì trên trang.", "");
   } else if (res.ok) {
     let msg = `✓ Đã điền ${res.filled}/${res.total} ô.`;
+    if (res.source === "fallback") {
+      msg += " (chế độ dự phòng không dùng AI - Ollama không phản hồi)";
+    }
     if (res.notes && res.notes.length) msg += " Lưu ý: " + res.notes.join("; ");
     setStatus(msg + " Hãy rà lại trước khi gửi!", "ok");
+    $("undoBtn").hidden = false;
+  } else {
+    setStatus("✗ " + res.error, "err");
+  }
+}
+
+async function undoFill() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !tab.id) return;
+  const res = await sendToTab(tab.id, { action: "undoFill" });
+  if (!res) {
+    setStatus("Không nhận được phản hồi từ trang.", "err");
+  } else if (res.ok) {
+    let msg = `↩ Đã khôi phục ${res.restored} ô về giá trị cũ.`;
+    if (res.notes && res.notes.length) msg += " Lưu ý: " + res.notes.join("; ");
+    setStatus(msg, "ok");
+    $("undoBtn").hidden = true;
   } else {
     setStatus("✗ " + res.error, "err");
   }
@@ -259,6 +284,10 @@ $("addFieldBtn").addEventListener("click", () => addFieldRow());
 $("saveBtn").addEventListener("click", saveProfile);
 $("testBtn").addEventListener("click", testConnection);
 $("fillBtn").addEventListener("click", fillForm);
+$("undoBtn").addEventListener("click", undoFill);
 ["ollamaUrl", "model"].forEach((id) => $(id).addEventListener("change", saveSettings));
+$("previewToggle").addEventListener("change", (e) =>
+  chrome.storage.local.set({ preview: e.target.checked })
+);
 
 document.addEventListener("DOMContentLoaded", load);

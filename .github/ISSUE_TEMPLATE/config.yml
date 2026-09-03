@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Câu hỏi sử dụng
+    url: https://github.com/huynhpham13790-rgb/smartfill-ai/discussions
+    about: Hỏi cách dùng, cấu hình Ollama, hoặc thảo luận ý tưởng tại đây.

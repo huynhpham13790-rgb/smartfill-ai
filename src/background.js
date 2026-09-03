@@ -11,6 +11,7 @@
 "use strict";
 
 import { buildPrompt } from "../shared/prompt.js";
+import { buildFallbackMapping } from "../shared/fallback.js";
 
 const DEFAULTS = {
   ollamaUrl: "http://localhost:11434",
@@ -82,8 +83,17 @@ async function callOllama(profile, fields) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "mapFields") {
     callOllama(msg.profile, msg.fields)
-      .then((mapping) => sendResponse({ ok: true, mapping }))
-      .catch((e) => sendResponse({ ok: false, error: e.message }));
+      .then((mapping) => sendResponse({ ok: true, mapping, source: "ai" }))
+      .catch((e) => {
+        // Ollama hỏng (chưa chạy / sai model / máy khác) thì vẫn phải điền được:
+        // chuyển sang bộ luật trong shared/fallback.js thay vì bỏ cuộc.
+        const mapping = buildFallbackMapping(msg.profile, msg.fields);
+        if (mapping.length === 0) {
+          sendResponse({ ok: false, error: e.message });
+        } else {
+          sendResponse({ ok: true, mapping, source: "fallback", aiError: e.message });
+        }
+      });
     return true; // bất đồng bộ
   }
 

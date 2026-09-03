@@ -5,6 +5,22 @@ Tất cả thay đổi đáng chú ý của dự án được ghi lại trong t�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.0.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [1.3.0] - 2026-09-03
+
+### Added (Thêm mới)
+- **Chế độ dự phòng không cần AI** (`shared/fallback.js`): khi Ollama không phản hồi (chưa cài, chưa chạy, thiếu model), extension chuyển sang ánh xạ theo bảng từ đồng nghĩa cho 11 khái niệm hồ sơ sinh viên thay vì báo lỗi và dừng. Popup nói rõ khi kết quả đến từ chế độ này.
+- **Xem trước trước khi điền**: bật tuỳ chọn trong popup để xem bảng ánh xạ nhãn → giá trị ngay trên trang, rồi mới quyết định điền hay huỷ. Tuỳ chọn được ghi nhớ.
+- **Hoàn tác**: nút khôi phục toàn bộ ô về giá trị trước lần điền gần nhất.
+- **Bộ kiểm thử và đo độ chính xác** (`tests/`): `npm test` chấm 4 form fixture với 16 ô có đáp án, phân biệt bốn loại lỗi (sai / thiếu / bịa / fid lạ) và thoát khác 0 nếu bộ luật dự phòng tụt dưới 100%. `npm run test:ai` đo thêm đường AI.
+- **Script đóng gói** (`tools/package.mjs`): `npm run package` tạo `dist/smartfill-ai-<phiên bản>.zip` chỉ bằng thư viện chuẩn của Node, không thêm phụ thuộc.
+- **`docs/AI.md`**: tài liệu kỹ thuật phần AI — lý do chạy local, thiết kế prompt, cách đo, kết quả, và các giới hạn đã biết.
+- **`CONTRIBUTING.md`** cùng mẫu issue và mẫu pull request trong `.github/`.
+- README (cả hai ngôn ngữ) bổ sung mục cài đặt/dịch từ mã nguồn, mục kiểm thử, và giải thích mục đích của giấy phép MIT.
+
+### Fixed (Sửa lỗi)
+- Bộ luật dự phòng khớp nhãn theo chuỗi con nên `"khoa"` trùng vào `"số tài khoản ngân hàng"`, điền tên khoa vào ô số tài khoản. Nay bắt buộc khớp theo ranh giới từ. Lỗi do benchmark phát hiện ngay lần chạy đầu.
+- `mcp-server/index.js` và `mcp-server/package.json` thiếu khai báo giấy phép; đã thêm header SPDX và trường `"license"`, cùng `author`, `repository`, `engines`.
+
 ## [1.2.0] - 2026-09-03
 
 ### Added (Thêm mới)
@@ -50,6 +66,7 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Nút kiểm tra kết nối Ollama và hiển thị danh sách model.
 - Trang form mẫu trong `demo/` để thử nghiệm.
 
+[1.3.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.3.0
 [1.2.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.2.0
 [1.1.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.1.0
 [1.0.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.0.0

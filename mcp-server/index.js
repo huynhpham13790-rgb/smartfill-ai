@@ -1,3 +1,12 @@
+/*
+ * SmartFill AI - mcp-server/index.js
+ * MCP server: quét và điền form qua Chrome DevTools Protocol, không cần extension.
+ *
+ * Copyright (c) 2026 Phạm Văn Huynh
+ * SPDX-License-Identifier: MIT
+ * Licensed under the MIT License. See LICENSE file in the project root.
+ */
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -17,7 +26,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "smartfill-ai-mcp",
-    version: "1.2.0",
+    version: "1.3.0",
   },
   {
     capabilities: {
