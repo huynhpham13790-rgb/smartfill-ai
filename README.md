@@ -26,7 +26,8 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 
 ## Requirements
 
-- A Manifest V3 compatible browser: **Google Chrome**, **Microsoft Edge**, **Brave**, **Opera** (Chromium-based), or **Mozilla Firefox**, **Zen Browser** (Firefox-based).
+- A Chromium-based browser: **Google Chrome**, **Microsoft Edge**, **Brave**, or **Opera**.
+  > **Firefox / Zen Browser are not supported.** This extension declares `background.service_worker`, which Firefox's MV3 implementation does not accept (it requires `background.scripts`), and the MCP server below speaks the Chrome DevTools Protocol, which Firefox does not expose.
 - [Ollama] installed and running on your machine.
 
 ## Installation
@@ -46,12 +47,12 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 
    - **Windows (PowerShell):**
      ```powershell
-     setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
+     setx OLLAMA_ORIGINS "chrome-extension://*"
      ```
      Then restart Ollama.
    - **macOS / Linux:**
      ```bash
-     export OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*"
+     export OLLAMA_ORIGINS="chrome-extension://*"
      ollama serve
      ```
 
@@ -80,17 +81,10 @@ After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama) → Mode
 ### Step 2 — Load the extension into your browser
 
 1. Download this source code (Code → Download ZIP, or `git clone`) and unzip it.
-2. Load the extension:
-   - **For Chrome / Edge / Chromium-based browsers:**
-     1. Open `chrome://extensions` (Edge: `edge://extensions`).
-     2. Turn on **Developer mode** in the top-right corner.
-     3. Click **Load unpacked** → select the `smartfill-ai` folder.
-   - **For Firefox / Zen Browser / Firefox-based browsers:**
-     1. Open `about:debugging` in the address bar.
-     2. Click **This Firefox** (or **This Zen**) on the left panel.
-     3. Click **Load Temporary Add-on...**
-     4. Select the `manifest.json` file inside the `smartfill-ai` directory.
-3. The SmartFill AI icon will appear in your toolbar.
+2. Open `chrome://extensions` (Edge: `edge://extensions`).
+3. Turn on **Developer mode** in the top-right corner.
+4. Click **Load unpacked** → select the `smartfill-ai` folder.
+5. The SmartFill AI icon will appear in your toolbar.
 
 > This is a pure-JavaScript extension with **no build/compile step**. The source runs directly as it is in the repository.
 
@@ -132,8 +126,13 @@ SmartFill AI includes a Node.js-based MCP Server. This allows autonomous AI agen
 ### Running the MCP Server
 
 1. Make sure your browser is launched with remote debugging enabled on port `9222`:
-   - **Zen Browser / Firefox:** `zen-browser --remote-debugging-port=9222`
    - **Chrome:** `google-chrome --remote-debugging-port=9222`
+   - **Edge:** `msedge --remote-debugging-port=9222`
+
+   > ⚠️ **Security warning.** Port 9222 gives *any* local process full control of that
+   > browser — including reading your cookies and logged-in sessions. Launch a
+   > throwaway profile with `--user-data-dir=/path/to/temp-profile` instead of your
+   > everyday one, and close it when you are done.
 2. Install the server dependencies:
    ```bash
    cd mcp-server

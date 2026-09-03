@@ -26,7 +26,8 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 
 ## Yêu cầu
 
-- Trình duyệt hỗ trợ Manifest V3: **Google Chrome**, **Microsoft Edge**, **Brave**, **Opera** (nhân Chromium), hoặc **Mozilla Firefox**, **Zen Browser** (nhân Firefox).
+- Trình duyệt nhân Chromium: **Google Chrome**, **Microsoft Edge**, **Brave** hoặc **Opera**.
+  > **Không hỗ trợ Firefox / Zen Browser.** Extension này khai báo `background.service_worker`, mà bản MV3 của Firefox không chấp nhận (Firefox yêu cầu `background.scripts`); ngoài ra MCP server bên dưới giao tiếp bằng Chrome DevTools Protocol, thứ Firefox không cung cấp.
 - [Ollama] đã cài và đang chạy trên máy.
 
 ## Cài đặt
@@ -46,12 +47,12 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 
    - **Windows (PowerShell):**
      ```powershell
-     setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
+     setx OLLAMA_ORIGINS "chrome-extension://*"
      ```
      Sau đó khởi động lại Ollama.
    - **macOS / Linux:**
      ```bash
-     export OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*"
+     export OLLAMA_ORIGINS="chrome-extension://*"
      ollama serve
      ```
 
@@ -80,17 +81,10 @@ Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama) → Model** và
 ### Bước 2 — Nạp extension vào trình duyệt
 
 1. Tải mã nguồn này về (Code → Download ZIP, hoặc `git clone`), giải nén.
-2. Nạp extension vào trình duyệt:
-   - **Đối với Chrome / Edge / trình duyệt nhân Chromium:**
-     1. Mở `chrome://extensions` (Edge: `edge://extensions`).
-     2. Bật **Developer mode** (Chế độ nhà phát triển) ở góc trên bên phải.
-     3. Bấm **Load unpacked** (Tải tiện ích đã giải nén) → chọn thư mục `smartfill-ai`.
-   - **Đối với Firefox / Zen Browser / trình duyệt nhân Firefox:**
-     1. Mở `about:debugging` trong thanh địa chỉ.
-     2. Chọn **This Firefox** (hoặc **This Zen**) ở khung bên trái.
-     3. Bấm **Load Temporary Add-on...** (Tải Tiện ích Tạm thời...).
-     4. Chọn tệp `manifest.json` trong thư mục `smartfill-ai`.
-3. Biểu tượng SmartFill AI sẽ xuất hiện trên thanh công cụ.
+2. Mở `chrome://extensions` (Edge: `edge://extensions`).
+3. Bật **Developer mode** (Chế độ nhà phát triển) ở góc trên bên phải.
+4. Bấm **Load unpacked** (Tải tiện ích đã giải nén) → chọn thư mục `smartfill-ai`.
+5. Biểu tượng SmartFill AI sẽ xuất hiện trên thanh công cụ.
 
 > Đây là một extension thuần JavaScript, **không cần bước build/biên dịch**. Mã nguồn chạy trực tiếp đúng như trong kho.
 
@@ -132,8 +126,13 @@ SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js. Điều n
 ### Chạy MCP Server
 
 1. Đảm bảo trình duyệt của bạn đã được khởi động với cổng gỡ lỗi từ xa `9222`:
-   - **Zen Browser / Firefox:** `zen-browser --remote-debugging-port=9222`
    - **Chrome:** `google-chrome --remote-debugging-port=9222`
+   - **Edge:** `msedge --remote-debugging-port=9222`
+
+   > ⚠️ **Cảnh báo bảo mật.** Cổng 9222 cho phép *bất kỳ* tiến trình nào trên máy điều khiển
+   > toàn bộ trình duyệt đó — kể cả đọc cookie và phiên đăng nhập của bạn. Hãy mở bằng một
+   > profile riêng dùng xong bỏ: `--user-data-dir=/duong/dan/profile-tam`, thay vì profile
+   > hàng ngày, và đóng lại khi dùng xong.
 2. Cài đặt các gói phụ thuộc:
    ```bash
    cd mcp-server
