@@ -108,6 +108,8 @@ smartfill-ai/
 ├── src/
 │   ├── content.js       # Quét & điền form trên trang
 │   └── background.js     # Service worker: gọi Ollama, map dữ liệu
+├── shared/
+│   └── prompt.js        # Chỉ dẫn AI dùng chung cho extension & MCP server
 ├── mcp-server/          # Tích hợp MCP server chạy trên Node.js
 │   ├── package.json
 │   └── index.js
@@ -121,7 +123,21 @@ smartfill-ai/
 
 ## Model Context Protocol (MCP) Server
 
-SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js. Điều này cho phép các trợ lý AI tự động (như Claude Code, Cursor...) gọi chức năng quét form và tự động điền form trực tiếp trên tab trình duyệt đang mở của bạn như một công cụ (tool).
+SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js, cho phép các trợ lý AI tự động
+(Claude Code, Cursor...) gọi chức năng quét và điền form trên tab trình duyệt đang mở
+như một công cụ (tool) — không cần bấm popup.
+
+**Cơ chế hoạt động.** MCP server *không* đi qua extension. Nó kết nối tới trình duyệt đang
+chạy qua Chrome DevTools Protocol, đọc thẳng file `src/content.js` từ đĩa rồi nạp vào trang
+để có `scanFields()` / `applyMapping()`, sau đó tự gọi Ollama. Một số hệ quả cần biết:
+
+- **Không cần cài extension** thì đường chạy MCP vẫn hoạt động.
+- Hồ sơ và cài đặt AI bạn lưu trong popup **không được dùng** — `fill_form` nhận hồ sơ
+  qua tham số, model/URL cũng vậy.
+- Chỉ trình duyệt nhân Chromium có CDP, nên đường này chỉ chạy trên Chrome/Edge/Brave/Opera.
+
+Cả hai đường chạy dùng chung chỉ dẫn AI trong `shared/prompt.js`, nên extension và MCP
+server luôn suy luận giống hệt nhau.
 
 ### Chạy MCP Server
 
@@ -152,11 +168,19 @@ SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js. Điều n
 
 ### Các Công Cụ (Tools) Cung Cấp
 
-- **`scan_form`**: Quét cấu trúc DOM của tab trình duyệt đang hoạt động và trả về danh sách các trường input/select/textarea phát hiện được.
-- **`fill_form`**: Tự động điền các ô nhập trên tab đang hoạt động bằng đối tượng thông tin hồ sơ được cung cấp. Nhận các tham số:
-  - `profile` (đối tượng, bắt buộc): Các cặp khóa-giá trị của hồ sơ người dùng.
-  - `model` (chuỗi, tùy chọn): Model Ollama cục bộ sẽ dùng (mặc định: `qwen2.5:7b`).
-  - `ollamaUrl` (chuỗi, tùy chọn): URL máy chủ Ollama cục bộ (mặc định: `http://localhost:11434`).
+- **`scan_form`** — quét một tab và trả về danh sách ô phát hiện được (nhãn, loại, và các
+  lựa chọn có sẵn với select/radio). Tham số:
+  - `targetUrl` (chuỗi, tùy chọn): chuỗi con để khớp với URL các tab đang mở. Bỏ trống thì
+    lấy tab đầu tiên — nên truyền khi bạn mở nhiều tab.
+- **`fill_form`** — quét tab, nhờ Ollama map hồ sơ vào từng ô, rồi điền vào trang. Tham số:
+  - `profile` (đối tượng, bắt buộc): các cặp khóa-giá trị hồ sơ, ví dụ
+    `{"Họ và tên": "Phạm Văn Huynh", "Mã số sinh viên": "DTC245200357"}`.
+  - `model` (chuỗi, tùy chọn): model Ollama cục bộ (mặc định: `qwen2.5:7b`).
+  - `ollamaUrl` (chuỗi, tùy chọn): URL Ollama (mặc định: `http://localhost:11434`).
+  - `targetUrl` (chuỗi, tùy chọn): như trên.
+
+  Trả về `detectedFieldsCount`, `mapping` đã suy luận, và `filledResult` cho biết điền
+  được bao nhiêu ô.
 
 ## Công nghệ & thư viện
 
@@ -164,7 +188,8 @@ SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js. Điều n
 - **JavaScript thuần (ES2020)** — không cần bundler, không gói đính kèm bên thứ ba.
 - **[Ollama]** — máy chủ mô hình ngôn ngữ chạy local; gọi qua REST API (`/api/chat`).
 - **Model mặc định:** `qwen2.5:7b` (khuyến nghị tối thiểu; có thể đổi sang model bất kỳ đã `ollama pull` trong Cài đặt AI).
-- **Model Context Protocol (MCP)** — cho phép các tác nhân AI gọi công cụ trực tiếp qua StdIO transport.
+- **[Model Context Protocol (MCP)]** — `@modelcontextprotocol/sdk` qua StdIO, để trợ lý AI bên ngoài gọi SmartFill như một công cụ.
+- **`chrome-remote-interface`** — client Chrome DevTools Protocol, MCP server dùng để nối tới tab đang mở.
 
 Toàn bộ chức năng AI dùng mô hình mã nguồn mở chạy cục bộ — không có khóa API trả phí, không gửi dữ liệu ra ngoài.
 
@@ -188,3 +213,4 @@ Báo lỗi hoặc đề xuất tính năng qua **GitHub Issues** của dự án.
 Phát hành theo [Giấy phép MIT](LICENSE) — bạn được tự do dùng, sửa, và phân phối lại.
 
 [Ollama]: https://ollama.com
+[Model Context Protocol (MCP)]: https://modelcontextprotocol.io

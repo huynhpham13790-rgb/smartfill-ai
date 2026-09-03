@@ -108,6 +108,8 @@ smartfill-ai/
 ├── src/
 │   ├── content.js       # Scans & fills forms on the page
 │   └── background.js    # Service worker: calls Ollama, maps data
+├── shared/
+│   └── prompt.js        # AI instructions shared by the extension & MCP server
 ├── mcp-server/          # Node.js MCP server integration
 │   ├── package.json
 │   └── index.js
@@ -121,7 +123,22 @@ smartfill-ai/
 
 ## Model Context Protocol (MCP) Server
 
-SmartFill AI includes a Node.js-based MCP Server. This allows autonomous AI agents (like Claude Code, Cursor, etc.) to command the form scanner and fill pages on your active browser tab directly as tools.
+SmartFill AI includes a Node.js-based MCP Server. This lets autonomous AI agents
+(Claude Code, Cursor, etc.) drive the form scanner and fill pages on a live browser
+tab as ordinary tools — no clicking the popup.
+
+**How it works.** The MCP server does *not* go through the extension. It attaches to a
+running browser over the Chrome DevTools Protocol, reads `src/content.js` off disk and
+evaluates it in the page to get `scanFields()` / `applyMapping()`, then calls Ollama
+directly. Consequences worth knowing:
+
+- The extension does **not** need to be installed for the MCP path to work.
+- Your saved popup profile and AI settings are **not** used — `fill_form` takes the
+  profile as a tool argument, and the model/URL as optional arguments.
+- Only Chromium-based browsers expose CDP, so this path is Chrome/Edge/Brave/Opera only.
+
+Both paths share the same AI instructions from `shared/prompt.js`, so the extension and
+the MCP server always resolve fields the same way.
 
 ### Running the MCP Server
 
@@ -152,11 +169,20 @@ SmartFill AI includes a Node.js-based MCP Server. This allows autonomous AI agen
 
 ### Exposed Tools
 
-- **`scan_form`**: Scans the active browser tab's DOM structure and returns the list of detected input/select/textarea fields.
-- **`fill_form`**: Automatically fills detected forms on the active tab using a profile object. Takes arguments:
-  - `profile` (object, required): Key-value pairs representing user profile data.
-  - `model` (string, optional): The local Ollama model to use (default: `qwen2.5:7b`).
-  - `ollamaUrl` (string, optional): Local Ollama server URL (default: `http://localhost:11434`).
+- **`scan_form`** — scans a browser tab and returns the detected fields (label, kind,
+  and the available options for selects/radios). Arguments:
+  - `targetUrl` (string, optional): substring matched against open tab URLs. If omitted,
+    the first open tab is used — pass this when you have more than one tab open.
+- **`fill_form`** — scans a tab, asks Ollama to map your profile onto the fields, and
+  fills them in. Arguments:
+  - `profile` (object, required): key-value pairs of user profile data, e.g.
+    `{"Họ và tên": "Phạm Văn Huynh", "Mã số sinh viên": "DTC245200357"}`.
+  - `model` (string, optional): local Ollama model to use (default: `qwen2.5:7b`).
+  - `ollamaUrl` (string, optional): Ollama server URL (default: `http://localhost:11434`).
+  - `targetUrl` (string, optional): same as above.
+
+  Returns `detectedFieldsCount`, the resolved `mapping`, and `filledResult` with how many
+  fields were actually written.
 
 ## Tech & libraries
 
@@ -164,7 +190,8 @@ SmartFill AI includes a Node.js-based MCP Server. This allows autonomous AI agen
 - **Plain JavaScript (ES2020)** — no bundler, no bundled third-party packages.
 - **[Ollama]** — local language-model server; called via its REST API (`/api/chat`).
 - **Default model:** `qwen2.5:7b` (minimum recommended; switch to any model you've `ollama pull`ed in AI Settings).
-- **Model Context Protocol (MCP)** — enables external agent tool calling via StdIO transport.
+- **[Model Context Protocol (MCP)]** — `@modelcontextprotocol/sdk` over StdIO, so external agents can call SmartFill as a tool.
+- **`chrome-remote-interface`** — Chrome DevTools Protocol client used by the MCP server to reach a live tab.
 
 All AI functionality uses an open-source model running locally — no paid API keys, no data sent anywhere.
 
@@ -188,3 +215,4 @@ Report bugs or request features via the project's **GitHub Issues**. See the cha
 Released under the [MIT License](LICENSE) — you are free to use, modify, and redistribute it.
 
 [Ollama]: https://ollama.com
+[Model Context Protocol (MCP)]: https://modelcontextprotocol.io

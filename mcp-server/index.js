@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "smartfill-ai-mcp",
-    version: "1.0.0",
+    version: "1.2.0",
   },
   {
     capabilities: {
@@ -34,8 +34,9 @@ async function getActiveTabClient(targetUrl) {
   } catch (err) {
     throw new Error(
       `Cannot connect to browser remote debugging port 9222: ${err.message}. ` +
-      `Make sure you launched your browser with remote debugging enabled, for example: ` +
-      `'zen-browser --remote-debugging-port=9222' or 'google-chrome --remote-debugging-port=9222'`
+      `Make sure you launched a Chromium-based browser with remote debugging enabled, ` +
+      `for example: 'google-chrome --remote-debugging-port=9222'. ` +
+      `Firefox/Zen are not supported: they do not expose the Chrome DevTools Protocol.`
     );
   }
 

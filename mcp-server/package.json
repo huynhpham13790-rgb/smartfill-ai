@@ -1,6 +1,6 @@
 {
   "name": "smartfill-ai-mcp",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "MCP Server for SmartFill AI form filling",
   "main": "index.js",
   "type": "module",
