@@ -12,6 +12,7 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - **Xem trước trước khi điền**: bật tuỳ chọn trong popup để xem bảng ánh xạ nhãn → giá trị ngay trên trang, rồi mới quyết định điền hay huỷ. Tuỳ chọn được ghi nhớ.
 - **Hoàn tác**: nút khôi phục toàn bộ ô về giá trị trước lần điền gần nhất.
 - **Bộ kiểm thử và đo độ chính xác** (`tests/`): `npm test` chấm 4 form fixture với 16 ô có đáp án, phân biệt bốn loại lỗi (sai / thiếu / bịa / fid lạ) và thoát khác 0 nếu bộ luật dự phòng tụt dưới 100%. `npm run test:ai` đo thêm đường AI.
+- **Bộ form khó** (`tests/fixtures/forms-hard.json`) và `npm run test:hard`: dropdown chỉ có mã viết tắt, họ tên tách hai ô, giá trị phải suy ra, form tiếng Anh, nhãn dạng câu hỏi. Bộ luật đạt 1/12 còn AI đạt 7/12 — bộ này mới cho thấy AI đóng góp gì, và cho thấy hai đường sai theo hai kiểu khác nhau.
 - **Script đóng gói** (`tools/package.mjs`): `npm run package` tạo `dist/smartfill-ai-<phiên bản>.zip` chỉ bằng thư viện chuẩn của Node, không thêm phụ thuộc.
 - **`docs/AI.md`**: tài liệu kỹ thuật phần AI — lý do chạy local, thiết kế prompt, cách đo, kết quả, và các giới hạn đã biết.
 - **`CONTRIBUTING.md`** cùng mẫu issue và mẫu pull request trong `.github/`.

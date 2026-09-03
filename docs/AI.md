@@ -84,16 +84,59 @@ Cách chấm phân biệt bốn loại lỗi, vì chúng không nghiêm trọng 
 
 ### Kết quả đo ngày 03/09/2026
 
+Trên bộ form thường (`fixtures/forms.json`, 16 ô):
+
 ```
 Bộ luật dự phòng    16/16 đúng (100%), 0 sai, 0 thiếu, 0 bịa, 0 fid lạ
 AI qua qwen2.5:7b   16/16 đúng (100%), 0 sai, 0 thiếu, 1 bịa, 0 fid lạ
 ```
 
+Hai đường ngang nhau — nhưng đó là vì bộ form này viết nhãn đúng theo kiểu mà
+bảng từ đồng nghĩa đã biết trước. Đo như vậy không nói lên điều gì về giá trị
+của AI, nên có thêm bộ form khó (`fixtures/forms-hard.json`, 12 ô): dropdown chỉ
+có mã viết tắt, họ và tên tách hai ô, giá trị phải suy ra từ trường khác, form
+tiếng Anh dùng cách gọi lạ, và nhãn viết thành câu hỏi tự nhiên.
+
+```
+Bộ luật dự phòng     1/12 đúng (8.3%),  3 sai, 8 thiếu, 0 bịa, 0 fid lạ
+AI qua qwen2.5:7b    7/12 đúng (58.3%), 5 sai, 0 thiếu, 0 bịa, 0 fid lạ
+```
+
+Đây mới là bức tranh thật, và nó nói hai điều.
+
+**Một: AI mở rộng phạm vi form dùng được.** Bảng từ đồng nghĩa chỉ khớp được
+những cách viết đã liệt kê sẵn; gặp `"Đơn vị đào tạo"` với lựa chọn `"CNTT"`,
+hay `"Chúng tôi nên gọi bạn là gì?"`, nó bó tay. Muốn bộ luật theo kịp thì phải
+liệt kê vô hạn cách người ta có thể đặt nhãn — đúng thứ mà mô hình ngôn ngữ
+sinh ra để giải.
+
+**Hai: hai đường sai theo hai kiểu khác nhau, và khác biệt đó quan trọng hơn con
+số phần trăm.** Bộ luật sai chủ yếu bằng cách **bỏ trống** (8 thiếu / 3 sai): nó
+không khớp được thì không điền. AI **không bao giờ bỏ trống** (0 thiếu / 5 sai):
+nó luôn đưa ra một đáp án, kể cả khi đáp án đó sai — điền số điện thoại vào ô
+hỏi cách liên hệ, hay cắt `"Phạm Văn Huynh"` thành `"Văn"`.
+
+Với người dùng, một ô trống là phiền; một ô điền sai mà vẫn trông hợp lý thì
+nguy hiểm hơn nhiều, vì rất dễ bấm gửi mà không đọc lại. Đó chính là lý do có
+tính năng **xem trước** và **hoàn tác**, chứ không phải để trang trí.
+
+### Vì sao AI vẫn trượt 5 ô
+
+Bốn trong năm ô sai đến từ việc phải **biến đổi** giá trị: tách họ khỏi tên, lấy
+năm từ ngày sinh đầy đủ. Quy tắc 1 của prompt cấm tuyệt đối việc sửa đổi giá trị
+lấy từ hồ sơ, vì chính quy tắc đó ngăn mô hình 7B viết sai tên riêng tiếng Việt.
+Nói cách khác đây là **đánh đổi có chủ ý**, không phải lỗi: chúng tôi chọn mất
+mấy ô cần biến đổi để không bao giờ điền sai chính tả tên người dùng.
+
+Nới quy tắc 1 để cho phép tách tên là hướng cải tiến rõ ràng nhất, nhưng phải đo
+lại toàn bộ trước khi đổi.
+
 Chạy lại:
 
 ```bash
-npm test          # chỉ bộ luật dự phòng, không cần Ollama
-npm run test:ai   # thêm đường AI, cần Ollama đang chạy
+npm test          # bộ form thường, chỉ bộ luật dự phòng, không cần Ollama
+npm run test:ai   # bộ form thường, thêm đường AI, cần Ollama đang chạy
+npm run test:hard # bộ form khó, cả hai đường
 ```
 
 `npm test` thoát với mã khác 0 nếu bộ luật dự phòng tụt dưới 100%, nên dùng được

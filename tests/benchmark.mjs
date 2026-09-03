@@ -6,6 +6,7 @@
  *   node tests/benchmark.mjs              -> chỉ đo bộ luật dự phòng (không cần AI)
  *   node tests/benchmark.mjs --ai         -> đo thêm đường AI qua Ollama
  *   node tests/benchmark.mjs --ai --model qwen2.5:7b
+ *   node tests/benchmark.mjs --ai --forms fixtures/forms-hard.json
  *
  * Cách tính điểm cho mỗi form:
  *   - đúng   : ô có trong đáp án và giá trị khớp
@@ -28,7 +29,10 @@ import { buildPrompt } from "../shared/prompt.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const profile = JSON.parse(fs.readFileSync(path.join(here, "fixtures/profile.json"), "utf8"));
-const forms = JSON.parse(fs.readFileSync(path.join(here, "fixtures/forms.json"), "utf8"));
+const args0 = process.argv.slice(2);
+const fi = args0.indexOf("--forms");
+const formsFile = (fi >= 0 && args0[fi + 1]) || "fixtures/forms.json";
+const forms = JSON.parse(fs.readFileSync(path.join(here, formsFile), "utf8"));
 
 const args = process.argv.slice(2);
 const useAi = args.includes("--ai");

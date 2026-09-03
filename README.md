@@ -130,8 +130,12 @@ known answers) and scores four distinct error classes: wrong, missing,
 hallucinated, and unknown-fid. It exits non-zero if the fallback mapper drops
 below 100%, so it works in CI without a GPU.
 
-Latest measurement (2026-09-03): both the fallback mapper and `qwen2.5:7b` score
-**16/16 fields correct**. Methodology and known limitations: [docs/AI.md](docs/AI.md).
+There are two fixture sets. On the ordinary one, both the fallback mapper and
+`qwen2.5:7b` score **16/16 fields correct**. On the hard one (abbreviated
+dropdowns, question-shaped labels, English forms), the rules manage only **1/12**
+while the AI gets **7/12** — and the two fail differently: the rules leave fields
+blank, the AI always guesses. Full analysis and known limitations:
+[docs/AI.md](docs/AI.md).
 
 ## Usage
 

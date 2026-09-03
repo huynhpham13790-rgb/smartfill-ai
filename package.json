@@ -16,6 +16,7 @@
   "scripts": {
     "test": "node tests/benchmark.mjs",
     "test:ai": "node tests/benchmark.mjs --ai",
-    "package": "node tools/package.mjs"
+    "package": "node tools/package.mjs",
+    "test:hard": "node tests/benchmark.mjs --ai --forms fixtures/forms-hard.json"
   }
 }

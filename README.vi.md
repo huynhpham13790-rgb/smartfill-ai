@@ -128,8 +128,11 @@ node index.js
 chấm bốn loại lỗi riêng biệt: sai, thiếu, bịa, và fid lạ. Lệnh thoát với mã khác 0
 nếu bộ luật dự phòng tụt dưới 100%, nên dùng được trong CI mà không cần GPU.
 
-Kết quả đo gần nhất (03/09/2026): cả bộ luật dự phòng lẫn `qwen2.5:7b` đều đạt
-**16/16 ô đúng**. Chi tiết cách đo và các giới hạn đã biết: [docs/AI.md](docs/AI.md).
+Có hai bộ form. Trên bộ thường, cả bộ luật dự phòng lẫn `qwen2.5:7b` đều đạt
+**16/16 ô đúng**. Trên bộ khó (dropdown viết tắt, nhãn dạng câu hỏi, form tiếng
+Anh), bộ luật chỉ được **1/12** còn AI được **7/12** — và hai đường sai theo hai
+kiểu khác nhau: bộ luật bỏ trống, AI thì luôn đoán một đáp án. Phân tích đầy đủ
+cùng các giới hạn đã biết: [docs/AI.md](docs/AI.md).
 
 ## Cách dùng
 
