@@ -1,0 +1,11 @@
+# Chuẩn hóa xuống dòng cho tệp văn bản, giữ nguyên byte cho tệp nhị phân.
+# Không có dòng "binary" bên dưới, Git sẽ đổi LF thành CRLF khi checkout trên
+# Windows và làm hỏng tệp PDF/PNG/ZIP.
+
+* text=auto eol=lf
+
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.zip   binary
+*.ico   binary
