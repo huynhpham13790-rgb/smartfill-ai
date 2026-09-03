@@ -26,7 +26,8 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 
 ## Requirements
 
-- A Chromium-based browser: **Google Chrome** or **Microsoft Edge** (Manifest V3 support).
+- A Chromium-based browser: **Google Chrome**, **Microsoft Edge**, **Brave**, or **Opera**.
+  > **Firefox / Zen Browser are not supported.** This extension declares `background.service_worker`, which Firefox's MV3 implementation does not accept (it requires `background.scripts`), and the MCP server below speaks the Chrome DevTools Protocol, which Firefox does not expose.
 - [Ollama] installed and running on your machine.
 
 ## Installation
@@ -80,7 +81,7 @@ After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama) → Mode
 ### Step 2 — Load the extension into your browser
 
 1. Download this source code (Code → Download ZIP, or `git clone`) and unzip it.
-2. Open Chrome/Edge and go to `chrome://extensions` (Edge: `edge://extensions`).
+2. Open `chrome://extensions` (Edge: `edge://extensions`).
 3. Turn on **Developer mode** in the top-right corner.
 4. Click **Load unpacked** → select the `smartfill-ai` folder.
 5. The SmartFill AI icon will appear in your toolbar.
@@ -107,6 +108,11 @@ smartfill-ai/
 ├── src/
 │   ├── content.js       # Scans & fills forms on the page
 │   └── background.js    # Service worker: calls Ollama, maps data
+├── shared/
+│   └── prompt.js        # AI instructions shared by the extension & MCP server
+├── mcp-server/          # Node.js MCP server integration
+│   ├── package.json
+│   └── index.js
 ├── icons/               # Extension icons
 ├── demo/                # Sample form page for testing
 │   └── demo-form.html
@@ -115,12 +121,77 @@ smartfill-ai/
 └── README.md
 ```
 
+## Model Context Protocol (MCP) Server
+
+SmartFill AI includes a Node.js-based MCP Server. This lets autonomous AI agents
+(Claude Code, Cursor, etc.) drive the form scanner and fill pages on a live browser
+tab as ordinary tools — no clicking the popup.
+
+**How it works.** The MCP server does *not* go through the extension. It attaches to a
+running browser over the Chrome DevTools Protocol, reads `src/content.js` off disk and
+evaluates it in the page to get `scanFields()` / `applyMapping()`, then calls Ollama
+directly. Consequences worth knowing:
+
+- The extension does **not** need to be installed for the MCP path to work.
+- Your saved popup profile and AI settings are **not** used — `fill_form` takes the
+  profile as a tool argument, and the model/URL as optional arguments.
+- Only Chromium-based browsers expose CDP, so this path is Chrome/Edge/Brave/Opera only.
+
+Both paths share the same AI instructions from `shared/prompt.js`, so the extension and
+the MCP server always resolve fields the same way.
+
+### Running the MCP Server
+
+1. Make sure your browser is launched with remote debugging enabled on port `9222`:
+   - **Chrome:** `google-chrome --remote-debugging-port=9222`
+   - **Edge:** `msedge --remote-debugging-port=9222`
+
+   > ⚠️ **Security warning.** Port 9222 gives *any* local process full control of that
+   > browser — including reading your cookies and logged-in sessions. Launch a
+   > throwaway profile with `--user-data-dir=/path/to/temp-profile` instead of your
+   > everyday one, and close it when you are done.
+2. Install the server dependencies:
+   ```bash
+   cd mcp-server
+   npm install
+   ```
+3. Register the MCP server in your AI agent config (e.g., `claudecode.json` or Cursor settings):
+   ```json
+   {
+     "mcpServers": {
+       "smartfill-ai-mcp": {
+         "command": "node",
+         "args": ["path/to/smartfill-ai/mcp-server/index.js"]
+       }
+     }
+   }
+   ```
+
+### Exposed Tools
+
+- **`scan_form`** — scans a browser tab and returns the detected fields (label, kind,
+  and the available options for selects/radios). Arguments:
+  - `targetUrl` (string, optional): substring matched against open tab URLs. If omitted,
+    the first open tab is used — pass this when you have more than one tab open.
+- **`fill_form`** — scans a tab, asks Ollama to map your profile onto the fields, and
+  fills them in. Arguments:
+  - `profile` (object, required): key-value pairs of user profile data, e.g.
+    `{"Họ và tên": "Phạm Văn Huynh", "Mã số sinh viên": "DTC245200357"}`.
+  - `model` (string, optional): local Ollama model to use (default: `qwen2.5:7b`).
+  - `ollamaUrl` (string, optional): Ollama server URL (default: `http://localhost:11434`).
+  - `targetUrl` (string, optional): same as above.
+
+  Returns `detectedFieldsCount`, the resolved `mapping`, and `filledResult` with how many
+  fields were actually written.
+
 ## Tech & libraries
 
 - **Chrome Extension Manifest V3** — no external framework dependency.
 - **Plain JavaScript (ES2020)** — no bundler, no bundled third-party packages.
 - **[Ollama]** — local language-model server; called via its REST API (`/api/chat`).
 - **Default model:** `qwen2.5:7b` (minimum recommended; switch to any model you've `ollama pull`ed in AI Settings).
+- **[Model Context Protocol (MCP)]** — `@modelcontextprotocol/sdk` over StdIO, so external agents can call SmartFill as a tool.
+- **`chrome-remote-interface`** — Chrome DevTools Protocol client used by the MCP server to reach a live tab.
 
 All AI functionality uses an open-source model running locally — no paid API keys, no data sent anywhere.
 
@@ -144,3 +215,4 @@ Report bugs or request features via the project's **GitHub Issues**. See the cha
 Released under the [MIT License](LICENSE) — you are free to use, modify, and redistribute it.
 
 [Ollama]: https://ollama.com
+[Model Context Protocol (MCP)]: https://modelcontextprotocol.io

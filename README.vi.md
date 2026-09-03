@@ -26,7 +26,8 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 
 ## Yêu cầu
 
-- Trình duyệt nhân Chromium: **Google Chrome** hoặc **Microsoft Edge** (hỗ trợ Manifest V3).
+- Trình duyệt nhân Chromium: **Google Chrome**, **Microsoft Edge**, **Brave** hoặc **Opera**.
+  > **Không hỗ trợ Firefox / Zen Browser.** Extension này khai báo `background.service_worker`, mà bản MV3 của Firefox không chấp nhận (Firefox yêu cầu `background.scripts`); ngoài ra MCP server bên dưới giao tiếp bằng Chrome DevTools Protocol, thứ Firefox không cung cấp.
 - [Ollama] đã cài và đang chạy trên máy.
 
 ## Cài đặt
@@ -80,7 +81,7 @@ Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama) → Model** và
 ### Bước 2 — Nạp extension vào trình duyệt
 
 1. Tải mã nguồn này về (Code → Download ZIP, hoặc `git clone`), giải nén.
-2. Mở Chrome/Edge, vào `chrome://extensions` (Edge: `edge://extensions`).
+2. Mở `chrome://extensions` (Edge: `edge://extensions`).
 3. Bật **Developer mode** (Chế độ nhà phát triển) ở góc trên bên phải.
 4. Bấm **Load unpacked** (Tải tiện ích đã giải nén) → chọn thư mục `smartfill-ai`.
 5. Biểu tượng SmartFill AI sẽ xuất hiện trên thanh công cụ.
@@ -107,6 +108,11 @@ smartfill-ai/
 ├── src/
 │   ├── content.js       # Quét & điền form trên trang
 │   └── background.js     # Service worker: gọi Ollama, map dữ liệu
+├── shared/
+│   └── prompt.js        # Chỉ dẫn AI dùng chung cho extension & MCP server
+├── mcp-server/          # Tích hợp MCP server chạy trên Node.js
+│   ├── package.json
+│   └── index.js
 ├── icons/               # Biểu tượng extension
 ├── demo/                # Trang form mẫu để thử nghiệm
 │   └── demo-form.html
@@ -115,12 +121,75 @@ smartfill-ai/
 └── README.md
 ```
 
+## Model Context Protocol (MCP) Server
+
+SmartFill AI tích hợp sẵn một MCP Server viết bằng Node.js, cho phép các trợ lý AI tự động
+(Claude Code, Cursor...) gọi chức năng quét và điền form trên tab trình duyệt đang mở
+như một công cụ (tool) — không cần bấm popup.
+
+**Cơ chế hoạt động.** MCP server *không* đi qua extension. Nó kết nối tới trình duyệt đang
+chạy qua Chrome DevTools Protocol, đọc thẳng file `src/content.js` từ đĩa rồi nạp vào trang
+để có `scanFields()` / `applyMapping()`, sau đó tự gọi Ollama. Một số hệ quả cần biết:
+
+- **Không cần cài extension** thì đường chạy MCP vẫn hoạt động.
+- Hồ sơ và cài đặt AI bạn lưu trong popup **không được dùng** — `fill_form` nhận hồ sơ
+  qua tham số, model/URL cũng vậy.
+- Chỉ trình duyệt nhân Chromium có CDP, nên đường này chỉ chạy trên Chrome/Edge/Brave/Opera.
+
+Cả hai đường chạy dùng chung chỉ dẫn AI trong `shared/prompt.js`, nên extension và MCP
+server luôn suy luận giống hệt nhau.
+
+### Chạy MCP Server
+
+1. Đảm bảo trình duyệt của bạn đã được khởi động với cổng gỡ lỗi từ xa `9222`:
+   - **Chrome:** `google-chrome --remote-debugging-port=9222`
+   - **Edge:** `msedge --remote-debugging-port=9222`
+
+   > ⚠️ **Cảnh báo bảo mật.** Cổng 9222 cho phép *bất kỳ* tiến trình nào trên máy điều khiển
+   > toàn bộ trình duyệt đó — kể cả đọc cookie và phiên đăng nhập của bạn. Hãy mở bằng một
+   > profile riêng dùng xong bỏ: `--user-data-dir=/duong/dan/profile-tam`, thay vì profile
+   > hàng ngày, và đóng lại khi dùng xong.
+2. Cài đặt các gói phụ thuộc:
+   ```bash
+   cd mcp-server
+   npm install
+   ```
+3. Đăng ký MCP server trong cấu hình của trợ lý AI (ví dụ `claudecode.json` hoặc cài đặt Cursor):
+   ```json
+   {
+     "mcpServers": {
+       "smartfill-ai-mcp": {
+         "command": "node",
+         "args": ["path/to/smartfill-ai/mcp-server/index.js"]
+       }
+     }
+   }
+   ```
+
+### Các Công Cụ (Tools) Cung Cấp
+
+- **`scan_form`** — quét một tab và trả về danh sách ô phát hiện được (nhãn, loại, và các
+  lựa chọn có sẵn với select/radio). Tham số:
+  - `targetUrl` (chuỗi, tùy chọn): chuỗi con để khớp với URL các tab đang mở. Bỏ trống thì
+    lấy tab đầu tiên — nên truyền khi bạn mở nhiều tab.
+- **`fill_form`** — quét tab, nhờ Ollama map hồ sơ vào từng ô, rồi điền vào trang. Tham số:
+  - `profile` (đối tượng, bắt buộc): các cặp khóa-giá trị hồ sơ, ví dụ
+    `{"Họ và tên": "Phạm Văn Huynh", "Mã số sinh viên": "DTC245200357"}`.
+  - `model` (chuỗi, tùy chọn): model Ollama cục bộ (mặc định: `qwen2.5:7b`).
+  - `ollamaUrl` (chuỗi, tùy chọn): URL Ollama (mặc định: `http://localhost:11434`).
+  - `targetUrl` (chuỗi, tùy chọn): như trên.
+
+  Trả về `detectedFieldsCount`, `mapping` đã suy luận, và `filledResult` cho biết điền
+  được bao nhiêu ô.
+
 ## Công nghệ & thư viện
 
 - **Chrome Extension Manifest V3** — không phụ thuộc framework ngoài.
 - **JavaScript thuần (ES2020)** — không cần bundler, không gói đính kèm bên thứ ba.
 - **[Ollama]** — máy chủ mô hình ngôn ngữ chạy local; gọi qua REST API (`/api/chat`).
 - **Model mặc định:** `qwen2.5:7b` (khuyến nghị tối thiểu; có thể đổi sang model bất kỳ đã `ollama pull` trong Cài đặt AI).
+- **[Model Context Protocol (MCP)]** — `@modelcontextprotocol/sdk` qua StdIO, để trợ lý AI bên ngoài gọi SmartFill như một công cụ.
+- **`chrome-remote-interface`** — client Chrome DevTools Protocol, MCP server dùng để nối tới tab đang mở.
 
 Toàn bộ chức năng AI dùng mô hình mã nguồn mở chạy cục bộ — không có khóa API trả phí, không gửi dữ liệu ra ngoài.
 
@@ -144,3 +213,4 @@ Báo lỗi hoặc đề xuất tính năng qua **GitHub Issues** của dự án.
 Phát hành theo [Giấy phép MIT](LICENSE) — bạn được tự do dùng, sửa, và phân phối lại.
 
 [Ollama]: https://ollama.com
+[Model Context Protocol (MCP)]: https://modelcontextprotocol.io
