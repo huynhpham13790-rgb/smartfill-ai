@@ -2,6 +2,10 @@
 
 > 🌐 **Ngôn ngữ / Language:** [English](README.md) · **Tiếng Việt**
 
+[![Kiểm thử](https://github.com/huynhpham13790-rgb/smartfill-ai/actions/workflows/test.yml/badge.svg)](https://github.com/huynhpham13790-rgb/smartfill-ai/actions/workflows/test.yml)
+[![Giấy phép: MIT](https://img.shields.io/badge/Gi%E1%BA%A5y%20ph%C3%A9p-MIT-blue.svg)](LICENSE)
+[![Phiên bản](https://img.shields.io/badge/phi%C3%AAn%20b%E1%BA%A3n-1.3.0-green.svg)](CHANGELOG.md)
+
 > Extension trình duyệt giúp tự động điền các biểu mẫu web (form đăng ký, khai báo thông tin, tạo tài khoản...) bằng AI chạy **local** qua [Ollama]. Bạn lưu hồ sơ một lần, AI sẽ tự hiểu nhãn từng ô và điền hộ — kể cả dropdown, radio, checkbox, ngày sinh.
 
 **Sản phẩm dự thi "Phát triển phần mềm mã nguồn mở tích hợp AI 2026" — Khoa CNTT, Trường ĐH CNTT&TT, ĐH Thái Nguyên.**

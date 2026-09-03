@@ -1,0 +1,61 @@
+# SmartFill AI - kiểm thử tự động
+# Copyright (c) 2026 Phạm Văn Huynh
+# SPDX-License-Identifier: MIT
+#
+# Chạy trên máy sạch để chứng minh dự án dựng và kiểm thử được từ mã nguồn
+# mà không cần cấu hình tay. Không dùng GPU và không cần Ollama: chỉ đường
+# dự phòng được chấm ở đây, đường AI phải chạy tay bằng `npm run test:ai`.
+
+name: Kiểm thử
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["18", "20", "22"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Kiểm tra manifest.json hợp lệ
+        run: node -e "const m=require('./manifest.json'); if(m.manifest_version!==3) throw new Error('manifest_version phải là 3'); console.log('manifest.json OK, phiên bản '+m.version)"
+
+      - name: Kiểm tra cú pháp toàn bộ tệp JS
+        run: |
+          for f in src/*.js popup/*.js shared/*.js mcp-server/*.js tools/*.mjs tests/*.mjs; do
+            node --check "$f" && echo "OK $f"
+          done
+
+      - name: Kiểm tra mọi tệp mã đều khai báo giấy phép
+        run: |
+          missing=0
+          for f in src/*.js popup/*.js popup/*.css popup/*.html shared/*.js mcp-server/index.js tools/*.mjs tests/*.mjs; do
+            grep -q "SPDX-License-Identifier" "$f" || { echo "THIẾU SPDX: $f"; missing=1; }
+          done
+          exit $missing
+
+      - name: Chạy kiểm thử ánh xạ
+        run: npm test
+
+      - name: Đóng gói extension
+        run: npm run package
+
+      - name: Lưu gói đã dựng
+        if: matrix.node == '20'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartfill-ai-extension
+          path: dist/*.zip

@@ -2,6 +2,10 @@
 
 > 🌐 **Language / Ngôn ngữ:** **English** · [Tiếng Việt](README.vi.md)
 
+[![Tests](https://github.com/huynhpham13790-rgb/smartfill-ai/actions/workflows/test.yml/badge.svg)](https://github.com/huynhpham13790-rgb/smartfill-ai/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.3.0-green.svg)](CHANGELOG.md)
+
 > A browser extension that auto-fills web forms (sign-up forms, registration, account creation...) using an AI model that runs **locally** through [Ollama]. Save your profile once, and the AI understands each field's label and fills it for you — including dropdowns, radio buttons, checkboxes, and dates.
 
 **Entry for the "Open-Source AI-Integrated Software Development 2026" competition — Faculty of IT, University of Information and Communication Technology, Thai Nguyen University.**
