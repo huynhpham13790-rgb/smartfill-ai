@@ -196,3 +196,21 @@ select:focus {
 .status.loading {
   color: var(--primary);
 }
+
+/* Tuỳ chọn xem trước + nút hoàn tác ở chân popup */
+.preview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #52525b;
+  cursor: pointer;
+}
+.preview-toggle input {
+  margin: 0;
+  cursor: pointer;
+}
+#undoBtn {
+  margin-top: 6px;
+}

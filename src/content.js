@@ -332,15 +332,89 @@ async function selectListboxOption(listboxEl, wantFolded, fallbackOptEl) {
 
 const HILITE = "2px solid #16a34a";
 
+// Ảnh chụp trạng thái trước lần điền gần nhất, để nút "Hoàn tác" khôi phục.
+let undoStack = [];
+
+/**
+ * Ghi lại giá trị hiện tại của một field trước khi ghi đè.
+ * Widget ARIA (Google Forms) chỉ khôi phục được thuộc tính aria-checked,
+ * không khôi phục được state nội bộ của Forms - xem README.
+ */
+function snapshot(f) {
+  try {
+    if (f.kind === "text" || f.kind === "select") {
+      return { fid: f.fid, kind: f.kind, value: f.els[0].value };
+    }
+    if (f.kind === "checkbox") {
+      return { fid: f.fid, kind: f.kind, checked: f.els[0].checked };
+    }
+    if (f.kind === "radio") {
+      return { fid: f.fid, kind: f.kind, checkedIndex: f.options.findIndex((o) => o.el.checked) };
+    }
+    if (f.kind === "aria-radio") {
+      return {
+        fid: f.fid,
+        kind: f.kind,
+        checked: f.options.map((o) => o.el.getAttribute("aria-checked") === "true"),
+      };
+    }
+  } catch (e) {}
+  return null;
+}
+
+/** Khôi phục trạng thái trước lần điền gần nhất. */
+function undoFill(fields) {
+  const byId = new Map(fields.map((f) => [f.fid, f]));
+  let restored = 0;
+  const notes = [];
+
+  for (const snap of undoStack) {
+    const f = byId.get(snap.fid);
+    if (!f) continue;
+    try {
+      if (snap.kind === "text" || snap.kind === "select") {
+        f.els[0].value = snap.value;
+        fireEvents(f.els[0]);
+        f.els[0].style.outline = "";
+      } else if (snap.kind === "checkbox") {
+        f.els[0].checked = snap.checked;
+        fireEvents(f.els[0]);
+        if (f.els[0].parentElement) f.els[0].parentElement.style.outline = "";
+      } else if (snap.kind === "radio") {
+        f.options.forEach((o, i) => {
+          o.el.checked = i === snap.checkedIndex;
+          if (o.el.parentElement) o.el.parentElement.style.outline = "";
+        });
+        if (snap.checkedIndex >= 0) fireEvents(f.options[snap.checkedIndex].el);
+      } else if (snap.kind === "aria-radio") {
+        f.options.forEach((o, i) => {
+          o.el.setAttribute("aria-checked", snap.checked[i] ? "true" : "false");
+          o.el.style.outline = "";
+        });
+      }
+      restored++;
+    } catch (e) {
+      notes.push(`Không hoàn tác được "${f.label}": ${e.message}`);
+    }
+  }
+
+  undoStack = [];
+  return { restored, notes };
+}
+
 /** Áp mapping của AI vào các field, tô màu ô đã điền. */
 async function applyMapping(fields, mapping) {
   const byId = new Map(fields.map((f) => [f.fid, f]));
   let filled = 0;
   const notes = [];
+  undoStack = [];
 
   for (const item of mapping) {
     const f = byId.get(item.fid);
     if (!f || item.value === undefined || item.value === null || item.value === "") continue;
+
+    const snap = snapshot(f);
+    if (snap) undoStack.push(snap);
 
     try {
       if (f.kind === "text") {
@@ -405,13 +479,84 @@ async function applyMapping(fields, mapping) {
   return { filled, notes };
 }
 
+// ===== Xem trước =====
+
+const PANEL_ID = "smartfill-preview-panel";
+
+/**
+ * Hiện bảng xem trước mapping và chờ người dùng quyết định.
+ * Trả về true nếu bấm "Điền", false nếu huỷ hoặc bấm Esc.
+ */
+function showPreview(fields, mapping) {
+  return new Promise((resolve) => {
+    document.getElementById(PANEL_ID)?.remove();
+    const byId = new Map(fields.map((f) => [f.fid, f]));
+
+    const panel = document.createElement("div");
+    panel.id = PANEL_ID;
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "SmartFill AI - xem trước");
+    panel.style.cssText = [
+      "position:fixed", "top:16px", "right:16px", "z-index:2147483647",
+      "width:340px", "max-height:70vh", "overflow:auto",
+      "background:#fff", "color:#111", "border:1px solid #d4d4d8", "border-radius:10px",
+      "box-shadow:0 8px 30px rgba(0,0,0,.18)", "padding:14px",
+      "font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif",
+    ].join(";");
+
+    const rows = mapping
+      .map((m) => {
+        const f = byId.get(m.fid);
+        if (!f) return "";
+        const esc = (t) =>
+          String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+        return `<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid #f1f1f4">
+          <div style="flex:0 0 42%;color:#666;overflow-wrap:anywhere">${esc(f.label || f.fid)}</div>
+          <div style="flex:1;font-weight:600;overflow-wrap:anywhere">${esc(m.value)}</div>
+        </div>`;
+      })
+      .join("");
+
+    const skipped = fields.length - mapping.length;
+    panel.innerHTML = `
+      <div style="font-weight:700;margin-bottom:2px">SmartFill AI - xem trước</div>
+      <div style="color:#666;margin-bottom:8px">Sẽ điền ${mapping.length}/${fields.length} ô${
+      skipped > 0 ? `, bỏ qua ${skipped} ô không có dữ liệu` : ""
+    }.</div>
+      ${rows || '<div style="color:#b91c1c">Không có ô nào khớp với hồ sơ.</div>'}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="sf-cancel" style="flex:1;padding:8px;border:1px solid #d4d4d8;background:#fff;border-radius:6px;cursor:pointer;font:inherit">Huỷ</button>
+        <button id="sf-ok" style="flex:1;padding:8px;border:0;background:#16a34a;color:#fff;border-radius:6px;cursor:pointer;font:inherit;font-weight:600">Điền</button>
+      </div>`;
+
+    document.body.appendChild(panel);
+
+    const close = (answer) => {
+      document.removeEventListener("keydown", onKey, true);
+      panel.remove();
+      resolve(answer);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close(false);
+    };
+    document.addEventListener("keydown", onKey, true);
+    panel.querySelector("#sf-ok").addEventListener("click", () => close(true));
+    panel.querySelector("#sf-cancel").addEventListener("click", () => close(false));
+    if (!mapping.length) panel.querySelector("#sf-ok").disabled = true;
+  });
+}
+
 // ===== Điều phối =====
 
-async function handleFill(profile) {
+// Danh sách field của lần quét gần nhất, để "Hoàn tác" tham chiếu đúng phần tử.
+let lastFields = [];
+
+async function handleFill(profile, opts = {}) {
   const fields = scanFields();
   if (fields.length === 0) {
     return { ok: false, error: "Không tìm thấy ô nhập nào trên trang này." };
   }
+  lastFields = fields;
 
   let res;
   try {
@@ -428,14 +573,34 @@ async function handleFill(profile) {
     return { ok: false, error: (res && res.error) || "AI không trả về kết quả." };
   }
 
+  if (opts.preview) {
+    const agreed = await showPreview(fields, res.mapping);
+    if (!agreed) return { ok: true, cancelled: true, total: fields.length, filled: 0, notes: [] };
+  }
+
   const result = await applyMapping(fields, res.mapping);
-  return { ok: true, total: fields.length, filled: result.filled, notes: result.notes };
+  return {
+    ok: true,
+    total: fields.length,
+    filled: result.filled,
+    notes: result.notes,
+    source: res.source,
+    aiError: res.aiError,
+  };
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "fillForm") {
-    handleFill(msg.profile).then(sendResponse);
+    handleFill(msg.profile, { preview: !!msg.preview }).then(sendResponse);
     return true;
+  }
+  if (msg.action === "undoFill") {
+    if (!lastFields.length) {
+      sendResponse({ ok: false, error: "Chưa có lần điền nào để hoàn tác." });
+    } else {
+      sendResponse({ ok: true, ...undoFill(lastFields) });
+    }
+    return false;
   }
   if (msg.action === "ping") {
     sendResponse({ ok: true });
@@ -445,5 +610,5 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // Cho phép kiểm thử bằng Node/jsdom.
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { scanFields, serializeField, applyMapping, normalizeDate, matchOption, bestMatchIndex, foldText };
+  module.exports = { scanFields, serializeField, applyMapping, undoFill, normalizeDate, matchOption, bestMatchIndex, foldText };
 }

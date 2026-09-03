@@ -23,6 +23,8 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 - ✅ Manage **multiple profiles** (e.g. personal profile, academic profile).
 - ✅ **Fully private**: your data stays on your machine and the AI runs locally — nothing is sent to the cloud.
 - ✅ Highlights the fields it just filled so you can **review before submitting**.
+- ✅ **Preview** the mapping before anything is written to the form, and **undo** in one click.
+- ✅ **Works even without Ollama**: falls back to a rule-based mapper.
 
 ## Requirements
 
@@ -88,6 +90,53 @@ After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama) → Mode
 
 > This is a pure-JavaScript extension with **no build/compile step**. The source runs directly as it is in the repository.
 
+## Installing and building from source
+
+The extension has **no compile step**: `manifest.json` points straight at the
+`.js` files and the browser runs them as they are. No bundler, no transpiler, no
+generated code. So "building from source" here means one of two things: loading
+the directory into the browser (Step 2 above), or packaging a release `.zip`.
+
+Requirements for packaging and running the tests: **Node.js 18 or newer**.
+
+```bash
+git clone https://github.com/huynhpham13790-rgb/smartfill-ai.git
+cd smartfill-ai
+
+npm test              # mapping tests, no Ollama needed
+npm run test:ai       # also exercises the AI path, needs Ollama running
+
+npm run package       # -> dist/smartfill-ai-<version>.zip
+```
+
+`npm run package` collects exactly what the browser needs (`manifest.json`,
+`src/`, `popup/`, `shared/`, `icons/`, `LICENSE`) into a `.zip` — an open archive
+format every OS can extract with built-in tools. The script uses only Node's
+standard library plus PowerShell (Windows) or `zip` (Linux/macOS), and **adds no
+dependencies**.
+
+The MCP server does need its dependencies installed first:
+
+```bash
+cd mcp-server
+npm ci                # installs the exact versions locked in package-lock.json
+node index.js
+```
+
+## Testing
+
+`npm test` runs `tests/benchmark.mjs` against 4 fixture forms (16 fields with
+known answers) and scores four distinct error classes: wrong, missing,
+hallucinated, and unknown-fid. It exits non-zero if the fallback mapper drops
+below 100%, so it works in CI without a GPU.
+
+There are two fixture sets. On the ordinary one, both the fallback mapper and
+`qwen2.5:7b` score **16/16 fields correct**. On the hard one (abbreviated
+dropdowns, question-shaped labels, English forms), the rules manage only **1/12**
+while the AI gets **7/12** — and the two fail differently: the rules leave fields
+blank, the AI always guesses. Full analysis and known limitations:
+[docs/AI.md](docs/AI.md).
+
 ## Usage
 
 1. Click the SmartFill AI icon to open the popup.
@@ -109,14 +158,23 @@ smartfill-ai/
 │   ├── content.js       # Scans & fills forms on the page
 │   └── background.js    # Service worker: calls Ollama, maps data
 ├── shared/
-│   └── prompt.js        # AI instructions shared by the extension & MCP server
+│   ├── prompt.js        # AI instructions shared by the extension & MCP server
+│   └── fallback.js      # Rule-based mapping, used when Ollama is unavailable
 ├── mcp-server/          # Node.js MCP server integration
 │   ├── package.json
 │   └── index.js
+├── tests/               # Tests & accuracy measurement
+│   ├── benchmark.mjs
+│   └── fixtures/        # Sample profile and forms with expected answers
+├── tools/
+│   └── package.mjs      # Packages the extension into a release .zip
+├── docs/
+│   └── AI.md            # AI technical documentation + measured results
 ├── icons/               # Extension icons
 ├── demo/                # Sample form page for testing
 │   └── demo-form.html
 ├── LICENSE              # MIT License
+├── CONTRIBUTING.md      # Contribution guide
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -208,11 +266,29 @@ All AI functionality uses an open-source model running locally — no paid API k
 
 ## Issues & contributing
 
-Report bugs or request features via the project's **GitHub Issues**. See the change history in [CHANGELOG.md](CHANGELOG.md).
+Report bugs or request features via
+[GitHub Issues](https://github.com/huynhpham13790-rgb/smartfill-ai/issues) —
+templates are provided for both. Read [CONTRIBUTING.md](CONTRIBUTING.md) before
+sending changes. See the change history in [CHANGELOG.md](CHANGELOG.md).
+
+When pasting logs into an issue, please strip the real personal data from your
+profile first.
 
 ## License
 
-Released under the [MIT License](LICENSE) — you are free to use, modify, and redistribute it.
+SmartFill AI is released under the [MIT License](LICENSE), an
+[OSI-approved](https://opensource.org/licenses/MIT) license.
+
+We chose MIT because this is a learning project: the point is that anyone can
+read it, run it, modify it, and lift a piece of the code into their own project —
+including a commercial one — without asking permission and without being forced
+to open their own source in return. The only condition is keeping the copyright
+and license notice.
+
+The full license text lives in [LICENSE](LICENSE) at the repository root. Every
+source file carries a short header with `SPDX-License-Identifier: MIT`; JSON
+files have no comment syntax, so they declare it via the `"license"` field in
+`package.json` instead.
 
 [Ollama]: https://ollama.com
 [Model Context Protocol (MCP)]: https://modelcontextprotocol.io

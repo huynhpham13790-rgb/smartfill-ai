@@ -13,3 +13,6 @@ Thumbs.db
 # File tạm
 *.log
 *.tmp
+
+# Gói phát hành sinh ra bởi "npm run package"
+dist/

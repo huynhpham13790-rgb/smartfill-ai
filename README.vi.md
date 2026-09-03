@@ -23,6 +23,8 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 - ✅ Quản lý **nhiều hồ sơ** (vd: hồ sơ cá nhân, hồ sơ học vụ).
 - ✅ **Riêng tư tuyệt đối**: dữ liệu lưu trong máy bạn, AI chạy local — không gửi lên cloud.
 - ✅ Tô màu các ô vừa điền để bạn **rà lại trước khi gửi**.
+- ✅ **Xem trước** bảng ánh xạ trước khi ghi vào form, và **hoàn tác** một cú bấm.
+- ✅ **Chạy được cả khi không có Ollama**: tự chuyển sang bộ luật dự phòng.
 
 ## Yêu cầu
 
@@ -88,6 +90,50 @@ Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama) → Model** và
 
 > Đây là một extension thuần JavaScript, **không cần bước build/biên dịch**. Mã nguồn chạy trực tiếp đúng như trong kho.
 
+## Cài đặt và dịch từ mã nguồn
+
+Extension **không có bước biên dịch**: `manifest.json` trỏ thẳng tới các tệp `.js`
+và trình duyệt chạy chúng nguyên trạng. Không có bundler, không có transpiler,
+không có mã sinh tự động. Vì vậy "dịch từ mã nguồn" ở đây nghĩa là hai việc: nạp
+thư mục vào trình duyệt (xem Bước 2 ở trên), hoặc đóng gói thành `.zip` phát hành.
+
+Yêu cầu để đóng gói và chạy kiểm thử: **Node.js 18 trở lên**.
+
+```bash
+git clone https://github.com/huynhpham13790-rgb/smartfill-ai.git
+cd smartfill-ai
+
+npm test              # kiểm thử ánh xạ, không cần Ollama
+npm run test:ai       # kiểm thử thêm đường AI, cần Ollama đang chạy
+
+npm run package       # -> dist/smartfill-ai-<phiên bản>.zip
+```
+
+`npm run package` gom đúng những tệp trình duyệt cần (`manifest.json`, `src/`,
+`popup/`, `shared/`, `icons/`, `LICENSE`) vào một `.zip` — định dạng nén mở, giải
+được bằng công cụ có sẵn của mọi hệ điều hành. Script chỉ dùng thư viện chuẩn của
+Node cùng PowerShell (Windows) hoặc `zip` (Linux/macOS), **không thêm phụ thuộc nào**.
+
+MCP server thì cần cài phụ thuộc trước khi chạy:
+
+```bash
+cd mcp-server
+npm ci                # cài đúng phiên bản đã khóa trong package-lock.json
+node index.js
+```
+
+## Kiểm thử
+
+`npm test` chạy `tests/benchmark.mjs` trên 4 form fixture (16 ô có đáp án) và
+chấm bốn loại lỗi riêng biệt: sai, thiếu, bịa, và fid lạ. Lệnh thoát với mã khác 0
+nếu bộ luật dự phòng tụt dưới 100%, nên dùng được trong CI mà không cần GPU.
+
+Có hai bộ form. Trên bộ thường, cả bộ luật dự phòng lẫn `qwen2.5:7b` đều đạt
+**16/16 ô đúng**. Trên bộ khó (dropdown viết tắt, nhãn dạng câu hỏi, form tiếng
+Anh), bộ luật chỉ được **1/12** còn AI được **7/12** — và hai đường sai theo hai
+kiểu khác nhau: bộ luật bỏ trống, AI thì luôn đoán một đáp án. Phân tích đầy đủ
+cùng các giới hạn đã biết: [docs/AI.md](docs/AI.md).
+
 ## Cách dùng
 
 1. Bấm biểu tượng SmartFill AI để mở popup.
@@ -109,14 +155,23 @@ smartfill-ai/
 │   ├── content.js       # Quét & điền form trên trang
 │   └── background.js     # Service worker: gọi Ollama, map dữ liệu
 ├── shared/
-│   └── prompt.js        # Chỉ dẫn AI dùng chung cho extension & MCP server
+│   ├── prompt.js        # Chỉ dẫn AI dùng chung cho extension & MCP server
+│   └── fallback.js      # Ánh xạ theo luật, dùng khi Ollama không chạy
 ├── mcp-server/          # Tích hợp MCP server chạy trên Node.js
 │   ├── package.json
 │   └── index.js
+├── tests/               # Kiểm thử & đo độ chính xác
+│   ├── benchmark.mjs
+│   └── fixtures/        # Hồ sơ và form mẫu kèm đáp án
+├── tools/
+│   └── package.mjs      # Đóng gói extension thành .zip phát hành
+├── docs/
+│   └── AI.md            # Tài liệu kỹ thuật phần AI + kết quả đo
 ├── icons/               # Biểu tượng extension
 ├── demo/                # Trang form mẫu để thử nghiệm
 │   └── demo-form.html
 ├── LICENSE              # Giấy phép MIT
+├── CONTRIBUTING.md      # Hướng dẫn đóng góp
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -206,11 +261,26 @@ Toàn bộ chức năng AI dùng mô hình mã nguồn mở chạy cục bộ �
 
 ## Quản lý lỗi & đóng góp
 
-Báo lỗi hoặc đề xuất tính năng qua **GitHub Issues** của dự án. Lịch sử thay đổi xem tại [CHANGELOG.md](CHANGELOG.md).
+Báo lỗi hoặc đề xuất tính năng qua
+[GitHub Issues](https://github.com/huynhpham13790-rgb/smartfill-ai/issues) — có sẵn
+mẫu cho báo lỗi và cho đề xuất tính năng. Trước khi gửi thay đổi, đọc
+[CONTRIBUTING.md](CONTRIBUTING.md). Lịch sử thay đổi xem tại [CHANGELOG.md](CHANGELOG.md).
+
+Khi dán log vào issue, nhớ xóa thông tin cá nhân thật trong hồ sơ của bạn trước.
 
 ## Giấy phép
 
-Phát hành theo [Giấy phép MIT](LICENSE) — bạn được tự do dùng, sửa, và phân phối lại.
+SmartFill AI phát hành theo [Giấy phép MIT](LICENSE), một giấy phép được
+[OSI](https://opensource.org/licenses/MIT) công nhận.
+
+Chúng tôi chọn MIT vì đây là dự án học tập: mục đích là để bất kỳ ai cũng có thể
+đọc, chạy, sửa, và mang một phần mã đi dùng trong dự án của họ — kể cả dự án
+thương mại — mà không phải xin phép và không bị ràng buộc phải mở mã theo. Điều
+kiện duy nhất là giữ lại thông báo bản quyền và giấy phép.
+
+Bản toàn văn giấy phép nằm trong tệp [LICENSE](LICENSE) ở thư mục gốc. Mỗi tệp mã
+mang một header ngắn với `SPDX-License-Identifier: MIT`; riêng tệp JSON không có
+cú pháp chú thích nên ghi giấy phép qua trường `"license"` trong `package.json`.
 
 [Ollama]: https://ollama.com
 [Model Context Protocol (MCP)]: https://modelcontextprotocol.io

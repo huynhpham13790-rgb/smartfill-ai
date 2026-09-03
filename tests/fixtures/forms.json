@@ -1,0 +1,64 @@
+[
+  {
+    "name": "Form đăng ký cơ bản (nhãn tiếng Việt đầy đủ)",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Họ và tên" },
+      { "fid": "f1", "kind": "text", "inputType": "text", "label": "Mã số sinh viên" },
+      { "fid": "f2", "kind": "text", "inputType": "email", "label": "Email" },
+      { "fid": "f3", "kind": "text", "inputType": "tel", "label": "Số điện thoại" },
+      { "fid": "f4", "kind": "text", "inputType": "date", "label": "Ngày sinh" }
+    ],
+    "expected": {
+      "f0": "Phạm Văn Huynh",
+      "f1": "DTC245200357",
+      "f2": "huynhpham13790@gmail.com",
+      "f3": "0359260290",
+      "f4": "2006-10-21"
+    }
+  },
+  {
+    "name": "Nhãn viết tắt và tiếng Anh",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Full name" },
+      { "fid": "f1", "kind": "text", "inputType": "text", "label": "MSSV" },
+      { "fid": "f2", "kind": "text", "inputType": "tel", "label": "SĐT" },
+      { "fid": "f3", "kind": "text", "inputType": "date", "label": "DOB" },
+      { "fid": "f4", "kind": "text", "inputType": "text", "label": "Lớp" }
+    ],
+    "expected": {
+      "f0": "Phạm Văn Huynh",
+      "f1": "DTC245200357",
+      "f2": "0359260290",
+      "f3": "2006-10-21",
+      "f4": "CNTT K21D"
+    }
+  },
+  {
+    "name": "Ô có lựa chọn sẵn (select / radio)",
+    "fields": [
+      { "fid": "f0", "kind": "select", "label": "Khoa", "options": ["Công nghệ thông tin", "Kỹ thuật máy tính", "Truyền thông đa phương tiện"] },
+      { "fid": "f1", "kind": "select", "label": "Quê quán", "options": ["Tỉnh Thái Nguyên", "Thành phố Hà Nội", "Tỉnh Bắc Ninh"] },
+      { "fid": "f2", "kind": "radio", "label": "Giới tính", "options": ["Nam", "Nữ", "Khác"] }
+    ],
+    "expected": {
+      "f0": "Công nghệ thông tin",
+      "f1": "Tỉnh Thái Nguyên",
+      "f2": "Nam"
+    }
+  },
+  {
+    "name": "Các bẫy: ô không có trong hồ sơ, ô dễ nhầm lẫn",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Địa chỉ email" },
+      { "fid": "f1", "kind": "text", "inputType": "text", "label": "Địa chỉ thường trú" },
+      { "fid": "f2", "kind": "text", "inputType": "text", "label": "Quê quán" },
+      { "fid": "f3", "kind": "text", "inputType": "text", "label": "Số tài khoản ngân hàng" },
+      { "fid": "f4", "kind": "checkbox", "label": "Tôi đồng ý với điều khoản" }
+    ],
+    "expected": {
+      "f0": "huynhpham13790@gmail.com",
+      "f1": "Số 3, tổ 5, phường Quang Trung, TP Thái Nguyên",
+      "f2": "Tỉnh Thái Nguyên"
+    }
+  }
+]

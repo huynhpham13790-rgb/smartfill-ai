@@ -1,0 +1,53 @@
+[
+  {
+    "name": "Dropdown viết tắt (hồ sơ ghi đầy đủ, form chỉ có mã)",
+    "fields": [
+      { "fid": "f0", "kind": "select", "label": "Đơn vị đào tạo", "options": ["CNTT", "KTMT", "TTĐPT", "KT"] }
+    ],
+    "expected": { "f0": "CNTT" }
+  },
+  {
+    "name": "Tách họ và tên thành hai ô riêng",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Họ và tên đệm" },
+      { "fid": "f1", "kind": "text", "inputType": "text", "label": "Tên" }
+    ],
+    "expected": { "f0": "Phạm Văn", "f1": "Huynh" }
+  },
+  {
+    "name": "Suy ra giá trị từ trường khác",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Năm sinh" },
+      { "fid": "f1", "kind": "select", "label": "Tỉnh/Thành phố nơi ở hiện tại", "options": ["Thái Nguyên", "Hà Nội", "Bắc Ninh"] }
+    ],
+    "expected": { "f0": "2006", "f1": "Thái Nguyên" }
+  },
+  {
+    "name": "Form tiếng Anh, cách gọi khác",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Surname and middle name" },
+      { "fid": "f1", "kind": "text", "inputType": "text", "label": "Given name" },
+      { "fid": "f2", "kind": "text", "inputType": "text", "label": "Contact number" },
+      { "fid": "f3", "kind": "text", "inputType": "text", "label": "Enrolment code" }
+    ],
+    "expected": {
+      "f0": "Phạm Văn",
+      "f1": "Huynh",
+      "f2": "0359260290",
+      "f3": "DTC245200357"
+    }
+  },
+  {
+    "name": "Nhãn viết thành câu hỏi tự nhiên",
+    "fields": [
+      { "fid": "f0", "kind": "text", "inputType": "text", "label": "Chúng tôi nên gọi bạn là gì?" },
+      { "fid": "f1", "kind": "text", "inputType": "text", "label": "Liên hệ với bạn bằng cách nào tiện nhất?" },
+      { "fid": "f2", "kind": "radio", "label": "Bạn là nam hay nữ?", "options": ["Nam", "Nữ"] }
+    ],
+    "expected": {
+      "f0": "Phạm Văn Huynh",
+      "f1": "huynhpham13790@gmail.com",
+      "f2": "Nam"
+    }
+  }
+]
