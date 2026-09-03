@@ -5,6 +5,21 @@ Tất cả thay đổi đáng chú ý của dự án được ghi lại trong t�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.0.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [1.4.0] - 2026-09-03
+
+### Added (Thêm mới)
+- **Nạp hồ sơ từ CV**: chọn tệp `.pdf`, `.txt` hoặc `.md`, extension trích văn bản rồi nhờ mô hình local rút ra các trường hồ sơ. Chỉ điền vào ô đang trống, không ghi đè thứ người dùng đã tự nhập; trường CV có mà hồ sơ chưa có thì tự thêm dòng mới.
+- `shared/cv.js`: đọc PDF không cần thư viện ngoài, dùng `DecompressionStream` sẵn có của trình duyệt để giải nén `FlateDecode`, đọc cả bảng `ToUnicode` để dịch mã glyph.
+- `looksReadable()`: chấm tỉ lệ ký tự hợp lệ và **từ chối** PDF đọc ra rác, kèm hướng dẫn copy sang `.txt`, thay vì đưa rác cho AI đoán mò.
+- `tests/cv.test.mjs` (14 điểm kiểm) và `tests/fixtures/cv-sample.pdf`. `npm test` nay chạy cả bộ này.
+
+### Changed (Thay đổi)
+- `popup.js` chuyển sang ES module (`<script type="module">`) để dùng chung `shared/cv.js`.
+- Tách `callOllamaJson()` trong `background.js` để việc điền form và việc đọc CV dùng chung một đường gọi Ollama.
+
+### Known limitation (Giới hạn đã biết)
+- Đọc PDF chỉ chạy với font chuẩn. PDF xuất từ Word/LaTeX với font tiếng Việt nhúng lưu chữ dưới dạng mã glyph riêng, đọc ra vẫn là rác kể cả khi đã dịch qua `ToUnicode`. Trường hợp đó extension báo rõ và hướng dẫn dùng `.txt`. Lý do không nhúng pdf.js: giữ extension không phụ thuộc. Chi tiết trong `docs/AI.md` mục 6.
+
 ## [1.3.0] - 2026-09-03
 
 ### Added (Thêm mới)
@@ -67,6 +82,7 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Nút kiểm tra kết nối Ollama và hiển thị danh sách model.
 - Trang form mẫu trong `demo/` để thử nghiệm.
 
+[1.4.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.4.0
 [1.3.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.3.0
 [1.2.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.2.0
 [1.1.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.1.0

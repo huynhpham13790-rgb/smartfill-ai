@@ -9,6 +9,8 @@
 
 "use strict";
 
+import { extractPdfText, looksReadable } from "../shared/cv.js";
+
 // Các trường gợi ý sẵn cho một hồ sơ sinh viên mới.
 const DEFAULT_KEYS = [
   "Họ và tên",
@@ -257,6 +259,84 @@ async function undoFill() {
   }
 }
 
+// ===== Nạp hồ sơ từ CV =====
+
+/** Đọc tệp CV thành văn bản thuần. */
+async function readCvFile(file) {
+  if (/\.pdf$/i.test(file.name)) {
+    const text = await extractPdfText(await file.arrayBuffer());
+    if (!looksReadable(text)) {
+      throw new Error(
+        "PDF này dùng font nhúng nên không đọc được chữ. Hãy mở PDF, bôi đen " +
+          "toàn bộ, copy rồi lưu thành tệp .txt và nạp lại."
+      );
+    }
+    return text;
+  }
+  return await file.text();
+}
+
+/** Nạp CV, nhờ AI trích hồ sơ, rồi điền vào các ô đang mở. */
+async function importCv(file) {
+  const el = $("cvResult");
+  el.className = "hint";
+  el.textContent = "Đang đọc tệp...";
+
+  let text;
+  try {
+    text = await readCvFile(file);
+  } catch (e) {
+    el.textContent = "✗ " + e.message;
+    el.className = "hint err";
+    return;
+  }
+
+  el.textContent = `Đã đọc ${text.length} ký tự. AI đang trích thông tin...`;
+
+  // Lấy đúng những trường đang có trong hồ sơ để AI biết cần tìm gì.
+  const keys = [...fieldsContainer.querySelectorAll(".kv-key")]
+    .map((i) => i.value.trim())
+    .filter(Boolean);
+
+  const res = await chrome.runtime.sendMessage({
+    action: "parseCv",
+    text,
+    keys: keys.length ? keys : DEFAULT_KEYS,
+  });
+
+  if (!res || !res.ok) {
+    el.textContent = "✗ " + ((res && res.error) || "AI không trích được thông tin.");
+    el.className = "hint err";
+    return;
+  }
+
+  // Chỉ điền vào ô đang trống, không ghi đè thứ người dùng đã tự nhập.
+  let filled = 0;
+  const leftover = { ...res.profile };
+  fieldsContainer.querySelectorAll(".kv-row").forEach((row) => {
+    const key = row.querySelector(".kv-key").value.trim();
+    const valInput = row.querySelector(".kv-val");
+    if (key in leftover && !valInput.value.trim()) {
+      valInput.value = leftover[key];
+      filled++;
+    }
+    delete leftover[key];
+  });
+  // Trường CV có mà hồ sơ chưa có thì thêm dòng mới.
+  Object.entries(leftover).forEach(([k, v]) => {
+    addFieldRow(k, v);
+    filled++;
+  });
+
+  if (filled === 0) {
+    el.textContent = "AI không tìm thấy thông tin mới (các ô đã có sẵn giá trị).";
+    el.className = "hint";
+  } else {
+    el.textContent = `✓ Đã điền ${filled} trường từ CV. Kiểm tra lại rồi bấm Lưu hồ sơ.`;
+    el.className = "hint ok";
+  }
+}
+
 /** Gửi message tới tab, trả null nếu content script chưa sẵn sàng. */
 function sendToTab(tabId, msg) {
   return new Promise((resolve) => {
@@ -281,6 +361,12 @@ profileSelect.addEventListener("change", async (e) => {
 $("newProfileBtn").addEventListener("click", createProfile);
 $("deleteProfileBtn").addEventListener("click", deleteProfile);
 $("addFieldBtn").addEventListener("click", () => addFieldRow());
+$("importCvBtn").addEventListener("click", () => $("cvFile").click());
+$("cvFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) importCv(file);
+  e.target.value = ""; // cho phép chọn lại đúng tệp đó
+});
 $("saveBtn").addEventListener("click", saveProfile);
 $("testBtn").addEventListener("click", testConnection);
 $("fillBtn").addEventListener("click", fillForm);

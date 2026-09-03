@@ -29,6 +29,7 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 - ✅ Highlights the fields it just filled so you can **review before submitting**.
 - ✅ **Preview** the mapping before anything is written to the form, and **undo** in one click.
 - ✅ **Works even without Ollama**: falls back to a rule-based mapper.
+- ✅ **Import your profile from a CV** (`.pdf`, `.txt`, `.md`): the AI reads it and fills the profile in.
 
 ## Requirements
 
@@ -163,7 +164,8 @@ smartfill-ai/
 │   └── background.js    # Service worker: calls Ollama, maps data
 ├── shared/
 │   ├── prompt.js        # AI instructions shared by the extension & MCP server
-│   └── fallback.js      # Rule-based mapping, used when Ollama is unavailable
+│   ├── fallback.js      # Rule-based mapping, used when Ollama is unavailable
+│   └── cv.js            # Reads a CV (.pdf/.txt/.md) and extracts a profile
 ├── mcp-server/          # Node.js MCP server integration
 │   ├── package.json
 │   └── index.js

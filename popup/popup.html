@@ -34,6 +34,9 @@
         <label class="field-label">Thông tin</label>
         <div id="fieldsContainer"></div>
         <button id="addFieldBtn" class="btn btn-ghost full">+ Thêm trường</button>
+        <button id="importCvBtn" class="btn btn-ghost full">📄 Nạp hồ sơ từ CV</button>
+        <input id="cvFile" type="file" accept=".pdf,.txt,.md" hidden />
+        <div id="cvResult" class="hint"></div>
       </section>
 
       <button id="saveBtn" class="btn btn-secondary full">💾 Lưu hồ sơ</button>
@@ -64,6 +67,6 @@
       <div id="status" class="status"></div>
     </footer>
 
-    <script src="popup.js"></script>
+    <script src="popup.js" type="module"></script>
   </body>
 </html>

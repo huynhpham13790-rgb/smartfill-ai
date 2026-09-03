@@ -29,6 +29,7 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 - ✅ Tô màu các ô vừa điền để bạn **rà lại trước khi gửi**.
 - ✅ **Xem trước** bảng ánh xạ trước khi ghi vào form, và **hoàn tác** một cú bấm.
 - ✅ **Chạy được cả khi không có Ollama**: tự chuyển sang bộ luật dự phòng.
+- ✅ **Nạp hồ sơ từ CV** (`.pdf`, `.txt`, `.md`): AI đọc CV và điền sẵn hồ sơ cho bạn.
 
 ## Yêu cầu
 
@@ -160,7 +161,8 @@ smartfill-ai/
 │   └── background.js     # Service worker: gọi Ollama, map dữ liệu
 ├── shared/
 │   ├── prompt.js        # Chỉ dẫn AI dùng chung cho extension & MCP server
-│   └── fallback.js      # Ánh xạ theo luật, dùng khi Ollama không chạy
+│   ├── fallback.js      # Ánh xạ theo luật, dùng khi Ollama không chạy
+│   └── cv.js            # Đọc CV (.pdf/.txt/.md) và trích hồ sơ bằng AI
 ├── mcp-server/          # Tích hợp MCP server chạy trên Node.js
 │   ├── package.json
 │   └── index.js

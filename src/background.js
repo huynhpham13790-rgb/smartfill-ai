@@ -12,6 +12,7 @@
 
 import { buildPrompt } from "../shared/prompt.js";
 import { buildFallbackMapping } from "../shared/fallback.js";
+import { buildCvPrompt } from "../shared/cv.js";
 
 const DEFAULTS = {
   ollamaUrl: "http://localhost:11434",
@@ -29,8 +30,13 @@ async function getConfig() {
 
 /** Gọi Ollama và lấy mapping. */
 async function callOllama(profile, fields) {
+  const parsed = await callOllamaJson(buildPrompt(profile, fields));
+  return Array.isArray(parsed.mapping) ? parsed.mapping : [];
+}
+
+/** Gửi một prompt tới Ollama và trả về JSON đã phân tích. */
+async function callOllamaJson(prompt) {
   const { ollamaUrl, model } = await getConfig();
-  const prompt = buildPrompt(profile, fields);
 
   let resp;
   try {
@@ -76,8 +82,7 @@ async function callOllama(profile, fields) {
     else throw new Error("Không phân tích được JSON từ AI: " + content.slice(0, 200));
   }
 
-  const mapping = Array.isArray(parsed.mapping) ? parsed.mapping : [];
-  return mapping;
+  return parsed;
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -95,6 +100,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
       });
     return true; // bất đồng bộ
+  }
+
+  if (msg.action === "parseCv") {
+    // Trích hồ sơ từ CV bắt buộc cần AI: không có bộ luật nào đọc nổi văn xuôi.
+    callOllamaJson(buildCvPrompt(msg.text, msg.keys))
+      .then((parsed) => {
+        const profile = parsed && typeof parsed.profile === "object" ? parsed.profile : {};
+        const clean = {};
+        for (const [k, v] of Object.entries(profile)) {
+          if (v !== null && v !== undefined && String(v).trim() !== "") clean[k] = String(v).trim();
+        }
+        sendResponse({ ok: true, profile: clean });
+      })
+      .catch((e) => sendResponse({ ok: false, error: e.message }));
+    return true;
   }
 
   if (msg.action === "testOllama") {

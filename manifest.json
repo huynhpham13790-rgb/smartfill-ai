@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SmartFill AI - Trợ lý điền form bằng AI",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Tự động điền form trên web bằng AI chạy local (Ollama). Hiểu nhãn ô thông minh, hỗ trợ text, dropdown, radio, checkbox, ngày sinh.",
   "author": "Phạm Văn Huynh",
   "permissions": ["storage", "activeTab", "scripting"],

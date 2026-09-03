@@ -153,7 +153,45 @@ trong CI mà không cần GPU.
   `applyMapping()` tra theo `fid` có thật và bỏ qua phần thừa — nhưng đây chính
   là lý do việc tra cứu đó phải giữ nguyên, đừng đổi sang duyệt theo thứ tự.
 
-## 6. Giới hạn đã biết
+## 6. Nạp hồ sơ từ CV
+
+Người dùng vẫn phải gõ tay từng trường vào popup. Tính năng "Nạp hồ sơ từ CV"
+rút ngắn việc đó: chọn một tệp `.pdf`, `.txt` hoặc `.md`, extension trích văn bản
+rồi nhờ chính mô hình local rút ra các trường hồ sơ.
+
+Prompt (`buildCvPrompt` trong `shared/cv.js`) giữ nguyên hai ràng buộc quan trọng
+nhất của prompt điền form: copy nguyên văn, và bỏ qua thay vì bịa. Có thêm một
+quy tắc riêng cho CV: chỉ lấy thông tin của **chủ nhân CV**, bỏ qua tên người
+tham chiếu, tên công ty, tên trường — vì CV có rất nhiều tên riêng không phải của
+người viết.
+
+Giá trị trích ra chỉ điền vào những ô **đang trống**; thứ người dùng đã tự nhập
+không bao giờ bị ghi đè.
+
+### Đọc PDF không dùng thư viện
+
+Extension không được thêm phụ thuộc, nên phần đọc PDF viết tay, dựa vào
+`DecompressionStream` có sẵn của trình duyệt để giải nén luồng `FlateDecode`,
+rồi bóc chuỗi từ các toán tử `Tj`/`TJ` trong content stream.
+
+Cách này **chỉ chạy với PDF dùng font chuẩn**. PDF xuất từ Word hay LaTeX với
+font tiếng Việt nhúng lưu chữ dưới dạng **mã glyph riêng của font**, không phải
+mã Unicode. Chúng tôi có đọc thêm bảng `ToUnicode` để dịch ngược, nhưng vẫn
+không đủ cho mọi tệp: thử trên một văn bản hành chính tiếng Việt thật, kết quả
+vẫn là chuỗi rác.
+
+Vì vậy có hàm `looksReadable()` chấm tỉ lệ ký tự hợp lệ trước khi gửi cho AI.
+Không đạt ngưỡng thì extension **từ chối và hướng dẫn người dùng copy nội dung
+PDF ra tệp `.txt`**, thay vì đưa rác cho mô hình đoán mò rồi sinh ra hồ sơ sai.
+
+Đây là đánh đổi có ý thức: đọc được mọi PDF thì phải nhúng một thư viện như
+pdf.js, kéo theo việc phải khai báo và bảo trì gói đính kèm. Chúng tôi chọn giữ
+extension không phụ thuộc, và nói thật với người dùng khi không đọc được.
+
+`tests/cv.test.mjs` kiểm 14 điểm: trích đúng 5 trường từ PDF mẫu, giữ xuống dòng,
+nhận ra chuỗi rác, và các ràng buộc của prompt.
+
+## 7. Giới hạn đã biết
 
 - Chưa đo trên Google Forms thật, vì widget ARIA khiến việc dựng fixture ổn định
   rất khó. Đường ARIA hiện chỉ được kiểm bằng tay.
@@ -161,3 +199,5 @@ trong CI mà không cần GPU.
   ngoài phạm vi đó vẫn cần AI.
 - Fixture dùng một hồ sơ duy nhất, nên đo được độ chính xác ánh xạ chứ chưa đo
   được độ bền trước hồ sơ khuyết thiếu nhiều trường.
+- Đọc PDF chỉ chạy với font chuẩn; PDF font nhúng tiếng Việt bị từ chối có kiểm
+  soát chứ chưa đọc được (xem mục 6).
