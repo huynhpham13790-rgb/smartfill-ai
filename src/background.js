@@ -13,6 +13,7 @@
 import { buildPrompt } from "../shared/prompt.js";
 import { buildFallbackMapping } from "../shared/fallback.js";
 import { buildCvPrompt } from "../shared/cv.js";
+import { normalizeModel } from "../shared/models.js";
 
 const DEFAULTS = {
   ollamaUrl: "http://localhost:11434",
@@ -117,13 +118,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  if (msg.action === "testOllama") {
+  if (msg.action === "listModels") {
+    // Dò xem máy đang có sẵn model nào. Dùng cho cả ô chọn model lẫn nút kiểm
+    // tra kết nối - hai việc này thực chất là cùng một lời gọi /api/tags.
     getConfig()
       .then(async ({ ollamaUrl, model }) => {
-        const r = await fetch(`${ollamaUrl}/api/tags`);
-        if (!r.ok) throw new Error("HTTP " + r.status);
+        let r;
+        try {
+          r = await fetch(`${ollamaUrl}/api/tags`);
+        } catch (e) {
+          throw new Error(
+            `Không kết nối được Ollama tại ${ollamaUrl}. Kiểm tra Ollama đã chạy chưa? (${e.message})`
+          );
+        }
+        if (!r.ok) throw new Error(`Ollama trả lỗi HTTP ${r.status}`);
         const d = await r.json();
-        const models = (d.models || []).map((m) => m.name);
+        const models = (d.models || []).map(normalizeModel).filter((m) => m.name);
         sendResponse({ ok: true, models, current: model });
       })
       .catch((e) => sendResponse({ ok: false, error: e.message }));

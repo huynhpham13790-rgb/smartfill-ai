@@ -30,6 +30,7 @@ Khác với tính năng autofill có sẵn của trình duyệt (chỉ khớp c�
 - ✅ **Xem trước** bảng ánh xạ trước khi ghi vào form, và **hoàn tác** một cú bấm.
 - ✅ **Chạy được cả khi không có Ollama**: tự chuyển sang bộ luật dự phòng.
 - ✅ **Nạp hồ sơ từ CV** (`.pdf`, `.txt`, `.md`): AI đọc CV và điền sẵn hồ sơ cho bạn.
+- ✅ **Tự dò model AI có trên máy** và cho chọn trong danh sách, kèm số tham số và dung lượng.
 
 ## Yêu cầu
 
@@ -81,9 +82,14 @@ Gợi ý nhanh theo máy:
 - **Máy phổ thông (RAM 16 GB) hoặc có GPU 6–8 GB:** `qwen2.5:7b` ⭐ — cân bằng nhất, nên dùng.
 - **Máy mạnh (GPU ≥ 10 GB VRAM):** `qwen2.5:14b` trở lên để có độ chính xác cao nhất.
 
-> **Vì sao chọn dòng Qwen2.5?** Nó hiểu tiếng Việt và xuất JSON ổn định hơn nhiều model cùng kích cỡ — rất hợp với việc đọc nhãn form tiếng Việt. Bạn vẫn có thể thử model khác (Gemma, Llama, Mistral...) trong **Cài đặt AI → Model**.
+> **Vì sao chọn dòng Qwen2.5?** Nó hiểu tiếng Việt và xuất JSON ổn định hơn nhiều model cùng kích cỡ — rất hợp với việc đọc nhãn form tiếng Việt. Bạn vẫn có thể thử model khác (Gemma, Llama, Mistral...) — `pull` xong là nó tự xuất hiện trong ô chọn.
 
-Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama) → Model** và nhập đúng tên model bạn đã tải (vd `qwen2.5:7b`), rồi bấm **Kiểm tra kết nối**.
+Sau khi `pull` xong, mở popup **⚙️ Cài đặt AI (Ollama)**. Extension **tự dò các model đang có trên máy** và đổ vào ô chọn, kèm số tham số và dung lượng (vd `qwen2.5:7b - 7.6B, 4.7 GB`), nên bạn không cần nhớ chính xác tên model. Chọn model muốn dùng là xong.
+
+- Nút **↻** dò lại, dùng khi bạn vừa `pull` thêm model mà popup đang mở.
+- Đổi **Địa chỉ Ollama** sẽ tự dò lại, vì máy khác có bộ model khác.
+- Nếu model bạn từng chọn đã bị gỡ khỏi máy, extension tự chuyển sang model khác **và báo rõ** thay vì lặng lẽ đổi.
+- Muốn dùng một model chưa xuất hiện trong danh sách (vd Ollama chạy ở máy khác trong mạng), tích **Nhập tên model thủ công** và gõ tên.
 
 ### Bước 2 — Nạp extension vào trình duyệt
 
@@ -162,7 +168,8 @@ smartfill-ai/
 ├── shared/
 │   ├── prompt.js        # Chỉ dẫn AI dùng chung cho extension & MCP server
 │   ├── fallback.js      # Ánh xạ theo luật, dùng khi Ollama không chạy
-│   └── cv.js            # Đọc CV (.pdf/.txt/.md) và trích hồ sơ bằng AI
+│   ├── cv.js            # Đọc CV (.pdf/.txt/.md) và trích hồ sơ bằng AI
+│   └── models.js        # Dò và chọn model Ollama có sẵn trên máy
 ├── mcp-server/          # Tích hợp MCP server chạy trên Node.js
 │   ├── package.json
 │   └── index.js

@@ -26,7 +26,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "smartfill-ai-mcp",
-    version: "1.4.0",
+    version: "1.5.0",
   },
   {
     capabilities: {

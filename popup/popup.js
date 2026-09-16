@@ -10,6 +10,12 @@
 "use strict";
 
 import { extractPdfText, looksReadable } from "../shared/cv.js";
+import {
+  PREFERRED_MODEL,
+  formatModelLabel,
+  sortModels,
+  pickDefaultModel,
+} from "../shared/models.js";
 
 // Các trường gợi ý sẵn cho một hồ sơ sinh viên mới.
 const DEFAULT_KEYS = [
@@ -29,6 +35,7 @@ const DEFAULT_KEYS = [
 let state = {
   profiles: [],
   activeProfileId: null,
+  savedModel: PREFERRED_MODEL,
 };
 
 // ===== DOM =====
@@ -40,7 +47,14 @@ const statusEl = $("status");
 
 // ===== Lưu trữ =====
 async function load() {
-  const data = await chrome.storage.local.get(["profiles", "activeProfileId", "ollamaUrl", "model", "preview"]);
+  const data = await chrome.storage.local.get([
+    "profiles",
+    "activeProfileId",
+    "ollamaUrl",
+    "model",
+    "preview",
+    "customModel",
+  ]);
   state.profiles = data.profiles || [];
   state.activeProfileId = data.activeProfileId || null;
 
@@ -55,8 +69,14 @@ async function load() {
   }
 
   $("ollamaUrl").value = data.ollamaUrl || "http://localhost:11434";
-  $("model").value = data.model || "qwen2.5:7b";
   $("previewToggle").checked = !!data.preview;
+
+  state.savedModel = data.model || PREFERRED_MODEL;
+  $("customModel").value = state.savedModel;
+  $("customModelToggle").checked = !!data.customModel;
+  applyCustomModelToggle();
+  // Không chờ: popup mở ngay, danh sách model điền vào sau khi dò xong.
+  refreshModels();
 
   renderProfileSelect();
   renderActiveProfile();
@@ -169,29 +189,102 @@ async function deleteProfile() {
   setStatus("Đã xóa hồ sơ", "ok");
 }
 
+/** Model đang được chọn: từ ô nhập tay nếu người dùng bật, ngược lại từ danh sách dò được. */
+function currentModel() {
+  if ($("customModelToggle").checked) {
+    return $("customModel").value.trim() || state.savedModel;
+  }
+  return $("model").value || state.savedModel;
+}
+
+/** Bật/tắt ô nhập tay và ô chọn tương ứng. */
+function applyCustomModelToggle() {
+  const manual = $("customModelToggle").checked;
+  $("customModel").hidden = !manual;
+  $("model").disabled = manual;
+  $("refreshModelsBtn").disabled = manual;
+}
+
 async function saveSettings() {
+  const model = currentModel();
+  state.savedModel = model;
   await chrome.storage.local.set({
     ollamaUrl: $("ollamaUrl").value.trim() || "http://localhost:11434",
-    model: $("model").value.trim() || "qwen2.5:7b",
+    model,
+    customModel: $("customModelToggle").checked,
   });
+}
+
+/** Đổ danh sách model vào ô chọn, đánh dấu model đang dùng. */
+function renderModelOptions(models, selected) {
+  const sel = $("model");
+  sel.innerHTML = "";
+
+  if (!models.length) {
+    const opt = document.createElement("option");
+    opt.value = selected;
+    opt.textContent = selected + " (chưa dò được)";
+    sel.appendChild(opt);
+    return;
+  }
+
+  sortModels(models).forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = m.name;
+    opt.textContent = formatModelLabel(m);
+    if (m.name === selected) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+/**
+ * Dò các model đang có trên máy và đổ vào ô chọn.
+ * @param {boolean} verbose - true khi người dùng tự bấm, để báo cả lúc thành công.
+ */
+async function refreshModels(verbose = false) {
+  const el = $("testResult");
+  if (verbose) {
+    el.textContent = "Đang dò model trên máy...";
+    el.className = "hint";
+  }
+
+  const res = await chrome.runtime.sendMessage({ action: "listModels" });
+
+  if (!res || !res.ok) {
+    // Không dò được thì vẫn giữ nguyên lựa chọn cũ để người dùng không mất cấu hình.
+    renderModelOptions([], state.savedModel);
+    el.textContent = "✗ " + ((res && res.error) || "Không kết nối được Ollama.");
+    el.className = "hint err";
+    return;
+  }
+
+  const models = res.models;
+  const chosen = pickDefaultModel(models, state.savedModel);
+  renderModelOptions(models, chosen);
+
+  if (!models.length) {
+    el.textContent = "⚠ Kết nối được Ollama nhưng máy chưa có model nào. Chạy: ollama pull " + PREFERRED_MODEL;
+    el.className = "hint err";
+    return;
+  }
+
+  if (chosen !== state.savedModel) {
+    // Model đã lưu không còn trên máy: tự chuyển nhưng phải nói cho người dùng biết.
+    el.textContent = `⚠ Model "${state.savedModel}" không còn trên máy, đã chuyển sang "${chosen}".`;
+    el.className = "hint err";
+    await saveSettings();
+    return;
+  }
+
+  if (verbose) {
+    el.textContent = `✓ Tìm thấy ${models.length} model. Đang dùng "${chosen}".`;
+    el.className = "hint ok";
+  }
 }
 
 async function testConnection() {
   await saveSettings();
-  const el = $("testResult");
-  el.textContent = "Đang kiểm tra...";
-  el.className = "hint";
-  const res = await chrome.runtime.sendMessage({ action: "testOllama" });
-  if (res && res.ok) {
-    const has = res.models.includes(res.current);
-    el.textContent = has
-      ? `✓ Đã kết nối. Model "${res.current}" sẵn sàng.`
-      : `⚠ Kết nối được, nhưng chưa có model "${res.current}". Hãy chạy: ollama pull ${res.current}`;
-    el.className = has ? "hint ok" : "hint err";
-  } else {
-    el.textContent = "✗ " + ((res && res.error) || "Không kết nối được Ollama.");
-    el.className = "hint err";
-  }
+  await refreshModels(true);
 }
 
 async function fillForm() {
@@ -371,7 +464,16 @@ $("saveBtn").addEventListener("click", saveProfile);
 $("testBtn").addEventListener("click", testConnection);
 $("fillBtn").addEventListener("click", fillForm);
 $("undoBtn").addEventListener("click", undoFill);
-["ollamaUrl", "model"].forEach((id) => $(id).addEventListener("change", saveSettings));
+["ollamaUrl", "model", "customModel"].forEach((id) =>
+  $(id).addEventListener("change", saveSettings)
+);
+$("refreshModelsBtn").addEventListener("click", () => refreshModels(true));
+$("customModelToggle").addEventListener("change", async () => {
+  applyCustomModelToggle();
+  await saveSettings();
+});
+// Đổi địa chỉ Ollama thì phải dò lại: máy khác có bộ model khác.
+$("ollamaUrl").addEventListener("change", () => refreshModels(true));
 $("previewToggle").addEventListener("change", (e) =>
   chrome.storage.local.set({ preview: e.target.checked })
 );

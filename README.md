@@ -30,6 +30,7 @@ Unlike the browser's built-in autofill (which only matches field names rigidly),
 - ✅ **Preview** the mapping before anything is written to the form, and **undo** in one click.
 - ✅ **Works even without Ollama**: falls back to a rule-based mapper.
 - ✅ **Import your profile from a CV** (`.pdf`, `.txt`, `.md`): the AI reads it and fills the profile in.
+- ✅ **Auto-detects the AI models installed on your machine** and lets you pick one, with parameter count and size.
 
 ## Requirements
 
@@ -81,9 +82,14 @@ Quick guidance by machine:
 - **Mainstream machine (16 GB RAM) or a 6–8 GB GPU:** `qwen2.5:7b` ⭐ — the best balance, recommended.
 - **Powerful machine (GPU ≥ 10 GB VRAM):** `qwen2.5:14b` or higher for top accuracy.
 
-> **Why the Qwen2.5 family?** It understands Vietnamese and produces stable JSON output far better than other models of the same size — ideal for reading Vietnamese form labels. You can still try other models (Gemma, Llama, Mistral...) under **AI Settings → Model**.
+> **Why the Qwen2.5 family?** It understands Vietnamese and produces stable JSON output far better than other models of the same size — ideal for reading Vietnamese form labels. You can still try other models (Gemma, Llama, Mistral...) — they show up in the picker as soon as you `pull` them.
 
-After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama) → Model**, enter the exact name of the model you downloaded (e.g. `qwen2.5:7b`), and click **Test connection**.
+After the `pull` finishes, open the popup **⚙️ AI Settings (Ollama)**. The extension **auto-detects the models installed on your machine** and lists them with parameter count and size (e.g. `qwen2.5:7b - 7.6B, 4.7 GB`), so you never have to remember an exact model name. Just pick one.
+
+- The **↻** button re-scans — handy when you `pull` a new model while the popup is open.
+- Changing the **Ollama URL** re-scans automatically, since another host has a different set of models.
+- If the model you previously selected has been removed, the extension switches to another one **and tells you**, rather than changing it silently.
+- To use a model that doesn't appear in the list (e.g. Ollama running on another machine), tick **Enter model name manually** and type it.
 
 ### Step 2 — Load the extension into your browser
 
@@ -165,7 +171,8 @@ smartfill-ai/
 ├── shared/
 │   ├── prompt.js        # AI instructions shared by the extension & MCP server
 │   ├── fallback.js      # Rule-based mapping, used when Ollama is unavailable
-│   └── cv.js            # Reads a CV (.pdf/.txt/.md) and extracts a profile
+│   ├── cv.js            # Reads a CV (.pdf/.txt/.md) and extracts a profile
+│   └── models.js        # Detects and picks an installed Ollama model
 ├── mcp-server/          # Node.js MCP server integration
 │   ├── package.json
 │   └── index.js

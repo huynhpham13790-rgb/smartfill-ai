@@ -214,3 +214,19 @@ select:focus {
 #undoBtn {
   margin-top: 6px;
 }
+
+/* Ô chọn model tự dò + nhập thủ công */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.checkbox-label input {
+  margin: 0;
+  cursor: pointer;
+}
+#model:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

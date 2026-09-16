@@ -5,6 +5,19 @@ Tất cả thay đổi đáng chú ý của dự án được ghi lại trong t�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.0.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [1.5.0] - 2026-09-16
+
+### Added (Thêm mới)
+- **Tự dò model AI có trên máy**: phần Cài đặt AI gọi `/api/tags` của Ollama và đổ danh sách model vào ô chọn, kèm số tham số và dung lượng (vd `qwen2.5:7b - 7.6B, 4.7 GB`). Không còn phải gõ tay và nhớ chính xác tên model.
+- Nút **↻** dò lại danh sách; đổi địa chỉ Ollama cũng tự dò lại vì máy khác có bộ model khác.
+- Tuỳ chọn **Nhập tên model thủ công** cho trường hợp model không nằm trong danh sách dò được.
+- `shared/models.js`: chuẩn hóa dữ liệu `/api/tags`, đặt nhãn, sắp xếp (đưa model khuyến nghị lên đầu) và chọn model mặc định.
+- `tests/models.test.mjs` (18 điểm kiểm). `npm test` nay chạy 48 điểm kiểm, vẫn không cần Ollama.
+
+### Changed (Thay đổi)
+- Ô nhập model đổi thành ô chọn. Model đã lưu mà không còn trên máy thì extension tự chuyển sang model khác **và báo rõ**, thay vì im lặng đổi hoặc báo lỗi khi điền.
+- Action `testOllama` trong `background.js` đổi thành `listModels`, trả về cả metadata của từng model. Nút "Kiểm tra kết nối" và ô chọn model nay dùng chung một lời gọi.
+
 ## [1.4.0] - 2026-09-03
 
 ### Added (Thêm mới)
@@ -82,6 +95,7 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Nút kiểm tra kết nối Ollama và hiển thị danh sách model.
 - Trang form mẫu trong `demo/` để thử nghiệm.
 
+[1.5.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.5.0
 [1.4.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.4.0
 [1.3.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.3.0
 [1.2.0]: https://github.com/huynhpham13790-rgb/smartfill-ai/releases/tag/v1.2.0

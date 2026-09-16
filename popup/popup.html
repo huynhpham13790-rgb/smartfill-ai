@@ -49,7 +49,15 @@
             <label class="mini-label" for="ollamaUrl">Địa chỉ Ollama</label>
             <input id="ollamaUrl" class="input" type="text" placeholder="http://localhost:11434" />
             <label class="mini-label" for="model">Model</label>
-            <input id="model" class="input" type="text" placeholder="qwen2.5:7b" />
+            <div class="row">
+              <select id="model" class="grow"></select>
+              <button id="refreshModelsBtn" class="btn btn-ghost" title="Dò lại model có trên máy">↻</button>
+            </div>
+            <label class="mini-label checkbox-label">
+              <input id="customModelToggle" type="checkbox" />
+              Nhập tên model thủ công
+            </label>
+            <input id="customModel" class="input" type="text" placeholder="vd: llama3.2:3b" hidden />
             <button id="testBtn" class="btn btn-ghost full">🔌 Kiểm tra kết nối</button>
             <div id="testResult" class="hint"></div>
           </div>

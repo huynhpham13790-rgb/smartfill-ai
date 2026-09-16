@@ -20,6 +20,31 @@ trợ tiếng Việt tốt, chạy được trên máy 8 GB RAM.
 Hệ quả: **không có byte dữ liệu hồ sơ nào rời khỏi máy**, và extension vẫn dùng
 được khi mất mạng.
 
+### Chọn model như thế nào
+
+Extension không ép một model cố định. Khi mở phần cài đặt, nó gọi `/api/tags`
+của Ollama để **dò xem máy đang có sẵn model nào**, rồi đổ vào ô chọn kèm số
+tham số và dung lượng — hai con số quyết định model có chạy nổi trên máy đó
+không.
+
+Logic chọn mặc định nằm trong `shared/models.js`, tách khỏi giao diện để kiểm
+thử được, vì nó có nhiều nhánh dễ sai:
+
+| Tình huống | Hành vi |
+|---|---|
+| Model đã chọn vẫn còn trên máy | Giữ nguyên |
+| Model đã chọn đã bị gỡ | Chuyển sang `qwen2.5:7b`, **và báo cho người dùng** |
+| Chưa chọn gì, máy có `qwen2.5:7b` | Dùng `qwen2.5:7b` |
+| Chưa chọn gì, máy không có model ưa thích | Dùng model đầu tiên theo thứ tự tên |
+| Máy chưa có model nào | Giữ nguyên lựa chọn cũ, để thông báo lỗi của Ollama còn nói đúng tên model bị thiếu |
+
+Nguyên tắc xuyên suốt: **không bao giờ lặng lẽ đổi model của người dùng**. Kết
+quả điền form phụ thuộc rõ rệt vào model, nên nếu extension tự đổi mà không nói,
+người dùng sẽ thấy chất lượng thay đổi mà không hiểu vì sao.
+
+`tests/models.test.mjs` kiểm 18 điểm cho phần này, gồm cả các mục `/api/tags`
+thiếu trường `details` — cấu trúc JSON của Ollama có đổi theo phiên bản.
+
 ## 2. Hai đường chạy độc lập
 
 Cùng một prompt (`shared/prompt.js`) phục vụ hai đường:
